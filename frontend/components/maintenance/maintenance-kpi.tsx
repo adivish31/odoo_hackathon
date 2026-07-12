@@ -1,4 +1,4 @@
-import { MaintenanceKPI } from "@/types/maintenance";
+import type { MaintenanceKPI as MaintenanceKPIType } from "@/types/maintenance";
 import {
   CreditCard,
   Factory,
@@ -17,7 +17,7 @@ const icons:any={
 export default function MaintenanceKPI({
 data
 }:{
-data:MaintenanceKPI[]
+data:MaintenanceKPIType[]
 }){
 
 
@@ -55,7 +55,7 @@ item={item}
 function KPI({
 item
 }:{
-item:MaintenanceKPI
+item:MaintenanceKPIType
 }){
 
 

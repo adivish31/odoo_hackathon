@@ -5,18 +5,7 @@ import { Input } from "@/components/ui/input";
 
 export default function TopNavbar() {
   return (
-    <header
-      className="
-      flex
-      h-16
-      items-center
-      justify-between
-      border-b
-      bg-white
-      px-4
-      md:px-6
-      "
-    >
+    <header className="flex h-16 items-center justify-between border-b bg-white px-4 md:px-6">
 
       {/* Mobile Menu Button */}
       <button className="md:hidden">
@@ -25,14 +14,7 @@ export default function TopNavbar() {
 
 
       {/* Search */}
-      <div
-        className="
-        w-full
-        max-w-xs
-        md:w-80
-        ml-3
-        "
-      >
+      <div className="w-full max-w-xs md:w-80 ml-3">
         <Input
           placeholder="Search..."
         />
@@ -46,10 +28,7 @@ export default function TopNavbar() {
 
 
         <Bell
-          className="
-          cursor-pointer
-          text-slate-600
-          "
+          className="cursor-pointer text-slate-600"
           size={20}
         />
 

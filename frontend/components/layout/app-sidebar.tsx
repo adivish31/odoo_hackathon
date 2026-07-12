@@ -30,18 +30,7 @@ export default function AppSidebar() {
   const pathname = usePathname();
 
   return (
-   <aside
-  className="
-  hidden
-  md:flex
-  min-h-screen
-  w-64
-  flex-col
-  border-r
-  bg-slate-900
-  text-white
-  "
->
+   <aside className="hidden md:flex min-h-screen w-64 flex-col border-r bg-slate-900 text-white">
 
       <div className="border-b px-6 py-6">
         <h1 className="text-2xl font-bold text-yellow-400">

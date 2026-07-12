@@ -1,69 +1,48 @@
-import { MaintenanceData } from "@/types/maintenance";
+import axios from "axios";
 
+const api = axios.create({
+  baseURL: (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4005") + "/api",
+});
 
-export async function getMaintenance()
-:Promise<MaintenanceData>{
+api.interceptors.request.use((config) => {
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  }
+  return config;
+});
 
-
-return {
-
-
-kpis:[
- {
-  title:"Monthly Spend",
-  value:"₹12,450",
-  icon:"payments"
- },
- {
-  title:"Units In Shop",
-  value:"05",
-  icon:"precision_manufacturing"
- },
- {
-  title:"Overdue Service",
-  value:"02",
-  icon:"warning"
- }
-],
-
-
-
-records:[
-
-{
- id:"1",
- vehicle:"VAN-05",
- model:"Ford Transit 2022",
- service:"Oil Change & Filter",
- cost:2500,
- status:"IN SHOP",
- date:"2026-07-10"
-},
-
-
-{
- id:"2",
- vehicle:"TRUCK-11",
- model:"Volvo VNL 860",
- service:"Engine Repair",
- cost:18000,
- status:"COMPLETED",
- date:"2026-07-08"
-},
-
-
-{
- id:"3",
- vehicle:"MINI-02",
- model:"Mini Cooper SE",
- service:"Tyre Replacement",
- cost:6200,
- status:"IN SHOP",
- date:"2026-07-05"
+export interface MaintenanceLog {
+  id: string;
+  vehicleId: string;
+  type: string;
+  description?: string;
+  cost: number;
+  status: "OPEN" | "CLOSED";
+  openedAt: string;
+  closedAt?: string;
+  vehicle?: {
+    id: string;
+    registrationNumber: string;
+    nameModel: string;
+    status: string;
+  };
 }
 
-]
-
+export async function listMaintenance(filters?: { vehicleId?: string; status?: "OPEN" | "CLOSED" }): Promise<MaintenanceLog[]> {
+  const params = filters || {};
+  const { data } = await api.get<MaintenanceLog[]>("/maintenance", { params });
+  return data;
 }
 
+export async function openMaintenance(payload: { vehicleId: string; type: string; description?: string; cost: number }): Promise<MaintenanceLog> {
+  const { data } = await api.post<MaintenanceLog>("/maintenance", payload);
+  return data;
+}
+
+export async function closeMaintenance(id: string): Promise<MaintenanceLog> {
+  const { data } = await api.post<MaintenanceLog>(`/maintenance/${id}/close`);
+  return data;
 }

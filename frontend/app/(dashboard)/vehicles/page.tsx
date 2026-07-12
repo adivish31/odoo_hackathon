@@ -4,8 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import { Plus, CarFront } from "lucide-react";
 import VehicleTable from "@/components/vehicles/vehicle-table";
 import AddVehicleModal from "@/components/vehicles/add-vehicle-modal";
-import { getVehicles, createVehicle, updateVehicle, retireVehicle } from "@/services/vehicle.service";
-import type { Vehicle, VehicleType, VehicleStatus, VehicleCreateInput, VehicleListFilters } from "@/types/vehicle";
+import { getVehicles, createVehicle, updateVehicle, retireVehicle, type VehicleListFilters } from "@/services/vehicle.service";
+import type { Vehicle, VehicleType, VehicleStatus, VehicleCreateInput } from "@/types/vehicle";
 
 export default function VehiclesPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -41,7 +41,7 @@ export default function VehiclesPage() {
   }, [fetchVehicles]);
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
-    setFilters((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    setFilters((prev: VehicleListFilters) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleOpenAdd = () => {
