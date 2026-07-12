@@ -2,75 +2,70 @@ import {
   Fuel,
   BarChart3,
   Wallet,
-  TrendingUp
+  TrendingUp,
 } from "lucide-react";
 
-import { KPI } from "@/types/report";
+import { FleetSummary } from "@/types/report";
 
-
-interface Props{
-  data:KPI;
+interface Props {
+  title:
+    | "Fuel Efficiency"
+    | "Fleet Utilization"
+    | "Operational Cost"
+    | "Vehicle ROI";
+  fleet: FleetSummary;
 }
 
-
-const iconMap:any={
-
- "Fuel Efficiency":Fuel,
-
- "Fleet Utilization":BarChart3,
-
- "Operational Cost":Wallet,
-
- "Vehicle ROI":TrendingUp
-
+const iconMap = {
+  "Fuel Efficiency": Fuel,
+  "Fleet Utilization": BarChart3,
+  "Operational Cost": Wallet,
+  "Vehicle ROI": TrendingUp,
 };
 
+export default function KpiCard({ title, fleet }: Props) {
+  const Icon = iconMap[title];
 
-export default function KpiCard({data}:Props){
+  let value: string | number = "";
+  let unit = "";
 
+  switch (title) {
+    case "Fuel Efficiency":
+      value = fleet.fleetFuelEfficiencyKmPerL ?? 0;
+      unit = "km/L";
+      break;
 
- const Icon=iconMap[data.title];
+    case "Fleet Utilization":
+      value = fleet.fleetUtilizationPct;
+      unit = "%";
+      break;
 
+    case "Operational Cost":
+      value = `₹${fleet.totalOperationalCost.toLocaleString()}`;
+      break;
 
- return(
+    case "Vehicle ROI":
+      value = `${((fleet.fleetRoi ?? 0) * 100).toFixed(2)}`;
+      unit = "%";
+      break;
+  }
 
-  <div className="bg-white rounded-xl border p-5">
+  return (
+    <div className="bg-white rounded-xl border p-5">
+      <div className="flex justify-between">
+        <p className="text-sm text-slate-500">{title}</p>
 
+        <Icon size={22} className="text-blue-600" />
+      </div>
 
-    <div className="flex justify-between">
-
-      <p className="text-sm text-slate-500">
-        {data.title}
-      </p>
-
-
-      <Icon
-        size={22}
-        className="text-blue-600"
-      />
-
+      <h2 className="text-3xl font-bold mt-5">
+        {value}
+        {unit && (
+          <span className="text-lg text-slate-400 ml-1">
+            {unit}
+          </span>
+        )}
+      </h2>
     </div>
-
-
-
-    <h2 className="text-3xl font-bold mt-5">
-
-      {data.value}
-
-      <span className="text-lg text-slate-400">
-        {data.unit}
-      </span>
-
-    </h2>
-
-
-    <p className="text-green-600 text-sm mt-2">
-      {data.trend}
-    </p>
-
-
-  </div>
-
- )
-
+  );
 }

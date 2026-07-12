@@ -7,79 +7,61 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  Legend,
 } from "recharts";
 
-import { Revenue } from "@/types/report";
-
+import { FleetSummary } from "@/types/report";
 
 interface Props {
-  data: Revenue[];
+  fleet: FleetSummary;
 }
 
-
-export default function RevenueChart({ data }: Props) {
-
+export default function RevenueChart({ fleet }: Props) {
+  const data = [
+    {
+      name: "Revenue",
+      amount: fleet.totalRevenue,
+    },
+    {
+      name: "Operational",
+      amount: fleet.totalOperationalCost,
+    },
+    {
+      name: "Fuel",
+      amount: fleet.totalFuelCost,
+    },
+    {
+      name: "Maintenance",
+      amount: fleet.totalMaintenanceCost,
+    },
+    {
+      name: "Expenses",
+      amount: fleet.totalExpenses,
+    },
+  ];
 
   return (
-
     <div className="bg-white border rounded-xl p-6">
-
-
       <h2 className="text-lg font-semibold mb-6">
-        Monthly Revenue
+        Fleet Financial Summary
       </h2>
 
-
-
-      <div className="h-[300px]">
-
-
+      <div className="h-[320px]">
         <ResponsiveContainer width="100%" height="100%">
-
           <BarChart data={data}>
-
-
-            <XAxis
-              dataKey="month"
-            />
-
+            <XAxis dataKey="name" />
 
             <YAxis />
 
-
             <Tooltip />
 
-
-            <Legend />
-
-
-
             <Bar
-              dataKey="planned"
-              name="Planned"
-              fill="#94a3b8"
-              radius={[6,6,0,0]}
-            />
-
-
-            <Bar
-              dataKey="actual"
-              name="Actual"
+              dataKey="amount"
               fill="#2563eb"
-              radius={[6,6,0,0]}
+              radius={[6, 6, 0, 0]}
             />
-
-
           </BarChart>
-
         </ResponsiveContainer>
-
-
       </div>
-
-
     </div>
-
   );
 }

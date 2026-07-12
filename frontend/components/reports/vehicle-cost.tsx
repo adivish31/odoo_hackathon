@@ -1,76 +1,50 @@
-import { VehicleCost } from "@/types/report";
+import { VehicleReport } from "@/types/report";
 
-
-interface Props{
-  data:VehicleCost[];
+interface Props {
+  vehicles: VehicleReport[];
 }
 
+export default function VehicleCostCard({ vehicles }: Props) {
+  const sortedVehicles = [...vehicles]
+    .sort((a, b) => b.operationalCost - a.operationalCost)
+    .slice(0, 5);
 
-export default function VehicleCostCard({data}:Props){
+  const maxCost =
+    sortedVehicles.length > 0
+      ? Math.max(...sortedVehicles.map((v) => v.operationalCost))
+      : 1;
 
+  return (
+    <div className="bg-white border rounded-xl p-6">
+      <h2 className="text-lg font-semibold mb-6">
+        Top Costliest Vehicles
+      </h2>
 
- return(
-
-  <div className="bg-white border rounded-xl p-6">
-
-
-    <h2 className="text-lg font-semibold mb-6">
-      Top Costliest Vehicles
-    </h2>
-
-
-
-    {
-      data.map((vehicle)=>(
-
+      {sortedVehicles.map((vehicle) => (
         <div
-          key={vehicle.vehicleId}
+          key={vehicle.id}
           className="mb-5"
         >
-
-
           <div className="flex justify-between text-sm">
-
             <span className="font-medium">
-              {vehicle.vehicleId}
+              {vehicle.registrationNumber}
             </span>
-
 
             <span>
-              ₹{vehicle.cost}
+              ₹{vehicle.operationalCost.toLocaleString()}
             </span>
-
-
           </div>
-
-
 
           <div className="h-2 bg-slate-200 rounded-full mt-2">
-
-
             <div
-
               className="h-full bg-red-500 rounded-full"
-
               style={{
-                width:`${Math.min(vehicle.cost/150,100)}%`
+                width: `${(vehicle.operationalCost / maxCost) * 100}%`,
               }}
-
             />
-
-
           </div>
-
-
         </div>
-
-
-      ))
-    }
-
-
-  </div>
-
- )
-
+      ))}
+    </div>
+  );
 }

@@ -3,6 +3,7 @@ import FuelLogTable from "@/components/expenses/fuel-log-table";
 import ExpenseTable from "@/components/expenses/expense-table";
 import ExpenseSummary from "@/components/expenses/expense-summary";
 import PlaceholderCards from "@/components/expenses/placeholder-cards";
+import AddExpenseForm from "@/components/expenses/add-expense-form";
 
 export default function ExpensesPage() {
   return (
@@ -13,6 +14,7 @@ export default function ExpensesPage() {
       <FuelLogTable />
 
       <ExpenseTable />
+      <AddExpenseForm />
 
       <ExpenseSummary />
 
