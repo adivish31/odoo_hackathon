@@ -1,0 +1,142 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  FLEET_MANAGER
+  DISPATCHER
+  SAFETY_OFFICER
+  FINANCIAL_ANALYST
+}
+
+enum VehicleStatus {
+  AVAILABLE
+  ON_TRIP
+  IN_SHOP
+  RETIRED
+}
+
+enum DriverStatus {
+  AVAILABLE
+  ON_TRIP
+  OFF_DUTY
+  SUSPENDED
+}
+
+enum TripStatus {
+  DRAFT
+  DISPATCHED
+  COMPLETED
+  CANCELLED
+}
+
+enum MaintStatus {
+  OPEN
+  CLOSED
+}
+
+enum ExpenseCat {
+  TOLL
+  PARKING
+  REPAIR
+  MISC
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role
+  trips        Trip[]
+  createdAt    DateTime @default(now())
+}
+
+model Vehicle {
+  id                 String           @id @default(cuid())
+  registrationNumber String           @unique // Rule R1
+  nameModel          String
+  type               String // truck | van | bike | bus
+  maxLoadCapacityKg  Decimal
+  odometerKm         Decimal          @default(0)
+  acquisitionCost    Decimal
+  region             String?
+  status             VehicleStatus    @default(AVAILABLE)
+  trips              Trip[]
+  maintenanceLogs    MaintenanceLog[]
+  fuelLogs           FuelLog[]
+  expenses           Expense[]
+}
+
+model Driver {
+  id                String       @id @default(cuid())
+  name              String
+  licenseNumber     String       @unique
+  licenseCategory   String
+  licenseExpiryDate DateTime // Rule R3
+  contactNumber     String
+  safetyScore       Int          @default(100)
+  status            DriverStatus @default(AVAILABLE)
+  trips             Trip[]
+}
+
+model Trip {
+  id                 String     @id @default(cuid())
+  source             String
+  destination        String
+  vehicle            Vehicle    @relation(fields: [vehicleId], references: [id])
+  vehicleId          String
+  driver             Driver     @relation(fields: [driverId], references: [id])
+  driverId           String
+  cargoWeightKg      Decimal // Rule R5
+  plannedDistanceKm  Decimal
+  actualDistanceKm   Decimal?
+  fuelConsumedLiters Decimal?
+  revenue            Decimal?
+  status             TripStatus @default(DRAFT)
+  dispatchedAt       DateTime?
+  completedAt        DateTime?
+  createdBy          User       @relation(fields: [createdById], references: [id])
+  createdById        String
+  fuelLogs           FuelLog[]
+  expenses           Expense[]
+}
+
+model MaintenanceLog {
+  id          String      @id @default(cuid())
+  vehicle     Vehicle     @relation(fields: [vehicleId], references: [id])
+  vehicleId   String
+  type        String
+  description String?
+  cost        Decimal
+  status      MaintStatus @default(OPEN) // Rules R9/R10
+  openedAt    DateTime    @default(now())
+  closedAt    DateTime?
+}
+
+model FuelLog {
+  id        String   @id @default(cuid())
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id])
+  vehicleId String
+  trip      Trip?    @relation(fields: [tripId], references: [id])
+  tripId    String?
+  liters    Decimal
+  cost      Decimal
+  date      DateTime @default(now())
+}
+
+model Expense {
+  id        String     @id @default(cuid())
+  vehicle   Vehicle    @relation(fields: [vehicleId], references: [id])
+  vehicleId String
+  trip      Trip?      @relation(fields: [tripId], references: [id])
+  tripId    String?
+  category  ExpenseCat
+  amount    Decimal
+  date      DateTime   @default(now())
+}
