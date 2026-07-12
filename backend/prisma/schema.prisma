@@ -7,6 +7,101 @@ datasource db {
   provider = "postgresql"
 }
 
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role
+  createdAt    DateTime @default(now())
+  trips        Trip[]
+}
+
+model Vehicle {
+  id                 String           @id @default(cuid())
+  registrationNumber String           @unique
+  nameModel          String
+  type               String
+  maxLoadCapacityKg  Decimal
+  odometerKm         Decimal          @default(0)
+  acquisitionCost    Decimal
+  region             String?
+  status             VehicleStatus    @default(AVAILABLE)
+  expenses           Expense[]
+  fuelLogs           FuelLog[]
+  maintenanceLogs    MaintenanceLog[]
+  trips              Trip[]
+}
+
+model Driver {
+  id                String       @id @default(cuid())
+  name              String
+  licenseNumber     String       @unique
+  licenseCategory   String
+  licenseExpiryDate DateTime
+  contactNumber     String
+  safetyScore       Int          @default(100)
+  status            DriverStatus @default(AVAILABLE)
+  trips             Trip[]
+}
+
+model Trip {
+  id                 String     @id @default(cuid())
+  source             String
+  destination        String
+  vehicleId          String
+  driverId           String
+  cargoWeightKg      Decimal
+  plannedDistanceKm  Decimal
+  actualDistanceKm   Decimal?
+  fuelConsumedLiters Decimal?
+  revenue            Decimal?
+  status             TripStatus @default(DRAFT)
+  dispatchedAt       DateTime?
+  completedAt        DateTime?
+  createdById        String
+  createdAt          DateTime   @default(now())
+  expenses           Expense[]
+  fuelLogs           FuelLog[]
+  createdBy          User       @relation(fields: [createdById], references: [id])
+  driver             Driver     @relation(fields: [driverId], references: [id])
+  vehicle            Vehicle    @relation(fields: [vehicleId], references: [id])
+}
+
+model MaintenanceLog {
+  id          String      @id @default(cuid())
+  vehicleId   String
+  type        String
+  description String?
+  cost        Decimal
+  status      MaintStatus @default(OPEN)
+  openedAt    DateTime    @default(now())
+  closedAt    DateTime?
+  vehicle     Vehicle     @relation(fields: [vehicleId], references: [id])
+}
+
+model FuelLog {
+  id        String   @id @default(cuid())
+  vehicleId String
+  tripId    String?
+  liters    Decimal
+  cost      Decimal
+  date      DateTime @default(now())
+  trip      Trip?    @relation(fields: [tripId], references: [id])
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id])
+}
+
+model Expense {
+  id        String     @id @default(cuid())
+  vehicleId String
+  tripId    String?
+  category  ExpenseCat
+  amount    Decimal
+  date      DateTime   @default(now())
+  trip      Trip?      @relation(fields: [tripId], references: [id])
+  vehicle   Vehicle    @relation(fields: [vehicleId], references: [id])
+}
+
 enum Role {
   FLEET_MANAGER
   DISPATCHER
@@ -45,99 +140,4 @@ enum ExpenseCat {
   PARKING
   REPAIR
   MISC
-}
-
-model User {
-  id           String   @id @default(cuid())
-  name         String
-  email        String   @unique
-  passwordHash String
-  role         Role
-  trips        Trip[]
-  createdAt    DateTime @default(now())
-}
-
-model Vehicle {
-  id                 String           @id @default(cuid())
-  registrationNumber String           @unique // Rule R1
-  nameModel          String
-  type               String // truck | van | bike | bus
-  maxLoadCapacityKg  Decimal
-  odometerKm         Decimal          @default(0)
-  acquisitionCost    Decimal
-  region             String?
-  status             VehicleStatus    @default(AVAILABLE)
-  trips              Trip[]
-  maintenanceLogs    MaintenanceLog[]
-  fuelLogs           FuelLog[]
-  expenses           Expense[]
-}
-
-model Driver {
-  id                String       @id @default(cuid())
-  name              String
-  licenseNumber     String       @unique
-  licenseCategory   String
-  licenseExpiryDate DateTime // Rule R3
-  contactNumber     String
-  safetyScore       Int          @default(100)
-  status            DriverStatus @default(AVAILABLE)
-  trips             Trip[]
-}
-
-model Trip {
-  id                 String     @id @default(cuid())
-  source             String
-  destination        String
-  vehicle            Vehicle    @relation(fields: [vehicleId], references: [id])
-  vehicleId          String
-  driver             Driver     @relation(fields: [driverId], references: [id])
-  driverId           String
-  cargoWeightKg      Decimal // Rule R5
-  plannedDistanceKm  Decimal
-  actualDistanceKm   Decimal?
-  fuelConsumedLiters Decimal?
-  revenue            Decimal?
-  status             TripStatus @default(DRAFT)
-  dispatchedAt       DateTime?
-  completedAt        DateTime?
-  createdBy          User       @relation(fields: [createdById], references: [id])
-  createdById        String
-  createdAt          DateTime   @default(now())
-  fuelLogs           FuelLog[]
-  expenses           Expense[]
-}
-
-model MaintenanceLog {
-  id          String      @id @default(cuid())
-  vehicle     Vehicle     @relation(fields: [vehicleId], references: [id])
-  vehicleId   String
-  type        String
-  description String?
-  cost        Decimal
-  status      MaintStatus @default(OPEN) // Rules R9/R10
-  openedAt    DateTime    @default(now())
-  closedAt    DateTime?
-}
-
-model FuelLog {
-  id        String   @id @default(cuid())
-  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id])
-  vehicleId String
-  trip      Trip?    @relation(fields: [tripId], references: [id])
-  tripId    String?
-  liters    Decimal
-  cost      Decimal
-  date      DateTime @default(now())
-}
-
-model Expense {
-  id        String     @id @default(cuid())
-  vehicle   Vehicle    @relation(fields: [vehicleId], references: [id])
-  vehicleId String
-  trip      Trip?      @relation(fields: [tripId], references: [id])
-  tripId    String?
-  category  ExpenseCat
-  amount    Decimal
-  date      DateTime   @default(now())
 }

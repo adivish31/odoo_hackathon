@@ -1,14 +1,21 @@
 export interface Driver {
   id: string;
+
   name: string;
-  licenseNo: string;
-  category: string;
-  expiryDate: string;
-  contact: string;
+
+  licenseNumber: string;
+
+  licenseCategory: string;
+
+  licenseExpiryDate: string;
+
+  contactNumber: string;
+
   safetyScore: number;
-  status: 
-    | "Available"
-    | "Suspended"
-    | "On Trip"
-    | "Off Duty";
+
+  status:
+    | "AVAILABLE"
+    | "ON_TRIP"
+    | "OFF_DUTY"
+    | "SUSPENDED";
 }
