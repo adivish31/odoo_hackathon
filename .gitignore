@@ -1,0 +1,15 @@
+# Internal planning docs — do not push
+TransitOps_PRD.md
+
+# Dependencies
+node_modules/
+
+# Environment / secrets
+.env
+.env.local
+.env*.local
+
+# Build output
+.next/
+dist/
+build/
