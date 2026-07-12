@@ -10,6 +10,8 @@ export const VEHICLE_TYPES = ["truck", "van", "bike", "bus"] as const;
 export const VEHICLE_STATUSES = ["AVAILABLE", "ON_TRIP", "IN_SHOP", "RETIRED"] as const;
 export const DRIVER_STATUSES = ["AVAILABLE", "ON_TRIP", "OFF_DUTY", "SUSPENDED"] as const;
 export const TRIP_STATUSES = ["DRAFT", "DISPATCHED", "COMPLETED", "CANCELLED"] as const;
+export const MAINT_STATUSES = ["OPEN", "CLOSED"] as const;
+export const EXPENSE_CATS = ["TOLL", "PARKING", "REPAIR", "MISC"] as const;
 
 // ---------- Auth ----------
 
@@ -97,3 +99,55 @@ export const tripListQuery = z.object({
 
 export type TripCreateInput = z.infer<typeof tripCreateSchema>;
 export type TripCompleteInput = z.infer<typeof tripCompleteSchema>;
+
+// ---------- Maintenance ----------
+
+export const maintenanceCreateSchema = z.object({
+  vehicleId: z.string().min(1),
+  type: z.string().min(1),
+  description: z.string().optional(),
+  cost: z.number().min(0),
+});
+
+export const maintenanceListQuery = z.object({
+  vehicleId: z.string().optional(),
+  status: z.enum(MAINT_STATUSES).optional(),
+});
+
+// ---------- Fuel logs ----------
+
+export const fuelLogSchema = z.object({
+  vehicleId: z.string().min(1),
+  tripId: z.string().optional(),
+  liters: z.number().positive(),
+  cost: z.number().min(0),
+  date: z.coerce.date().optional(),
+});
+
+export const fuelLogListQuery = z.object({
+  vehicleId: z.string().optional(),
+  tripId: z.string().optional(),
+});
+
+// ---------- Expenses ----------
+
+export const expenseSchema = z.object({
+  vehicleId: z.string().min(1),
+  tripId: z.string().optional(),
+  category: z.enum(EXPENSE_CATS),
+  amount: z.number().positive(),
+  date: z.coerce.date().optional(),
+});
+
+export const expenseListQuery = z.object({
+  vehicleId: z.string().optional(),
+  category: z.enum(EXPENSE_CATS).optional(),
+});
+
+// ---------- Dashboard ----------
+
+export const dashboardQuery = z.object({
+  type: z.enum(VEHICLE_TYPES).optional(),
+  status: z.enum(VEHICLE_STATUSES).optional(),
+  region: z.string().optional(),
+});
