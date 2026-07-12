@@ -70,117 +70,111 @@ export async function createTrip(input: TripCreateInput, createdById: string) {
   });
 }
 
-export function dispatchTrip(id: string) {
-  return prisma.$transaction(async (tx) => {
-    const trip = await tx.trip.findUnique({
-      where: { id },
-      include: { vehicle: true, driver: true },
-    });
-    if (!trip) throw new AppError("Trip not found", 404);
-    if (trip.status !== "DRAFT") {
-      throw new AppError(
-        `Only draft trips can be dispatched (this trip is ${trip.status.toLowerCase()})`,
-      );
-    }
+export async function dispatchTrip(id: string) {
+  const trip = await prisma.trip.findUnique({
+    where: { id },
+    include: { vehicle: true, driver: true },
+  });
+  if (!trip) throw new AppError("Trip not found", 404);
+  if (trip.status !== "DRAFT") {
+    throw new AppError(
+      `Only draft trips can be dispatched (this trip is ${trip.status.toLowerCase()})`,
+    );
+  }
 
-    assertDriverEligible(trip.driver); // R3
-    assertCargoFits(Number(trip.cargoWeightKg), trip.vehicle); // R5
+  assertDriverEligible(trip.driver); // R3
+  assertCargoFits(Number(trip.cargoWeightKg), trip.vehicle); // R5
 
-    // R4 + R6: guarded updates make concurrent double-dispatch impossible —
-    // the losing transaction matches 0 rows and rolls back.
-    const v = await tx.vehicle.updateMany({
-      where: { id: trip.vehicleId, status: "AVAILABLE" },
-      data: { status: "ON_TRIP" },
-    });
-    if (v.count === 0) {
-      throw new AppError(`${trip.vehicle.registrationNumber} is not available`);
-    }
-    const d = await tx.driver.updateMany({
-      where: { id: trip.driverId, status: "AVAILABLE" },
-      data: { status: "ON_TRIP" },
-    });
-    if (d.count === 0) {
-      throw new AppError(`${trip.driver.name} is not available`);
-    }
+  // R4 + R6: guarded updates make concurrent double-dispatch impossible —
+  // the losing transaction matches 0 rows and rolls back.
+  const v = await prisma.vehicle.updateMany({
+    where: { id: trip.vehicleId, status: "AVAILABLE" },
+    data: { status: "ON_TRIP" },
+  });
+  if (v.count === 0) {
+    throw new AppError(`${trip.vehicle.registrationNumber} is not available`);
+  }
+  const d = await prisma.driver.updateMany({
+    where: { id: trip.driverId, status: "AVAILABLE" },
+    data: { status: "ON_TRIP" },
+  });
+  if (d.count === 0) {
+    throw new AppError(`${trip.driver.name} is not available`);
+  }
 
-    return tx.trip.update({
-      where: { id },
-      data: { status: "DISPATCHED", dispatchedAt: new Date() },
-      include: tripInclude,
-    });
+  return prisma.trip.update({
+    where: { id },
+    data: { status: "DISPATCHED", dispatchedAt: new Date() },
+    include: tripInclude,
   });
 }
 
-export function completeTrip(id: string, input: TripCompleteInput) {
-  return prisma.$transaction(async (tx) => {
-    const trip = await tx.trip.findUnique({
-      where: { id },
-      include: { vehicle: true },
-    });
-    if (!trip) throw new AppError("Trip not found", 404);
-    if (trip.status !== "DISPATCHED") {
-      throw new AppError(
-        `Only dispatched trips can be completed (this trip is ${trip.status.toLowerCase()})`,
-      );
-    }
+export async function completeTrip(id: string, input: TripCompleteInput) {
+  const trip = await prisma.trip.findUnique({
+    where: { id },
+    include: { vehicle: true },
+  });
+  if (!trip) throw new AppError("Trip not found", 404);
+  if (trip.status !== "DISPATCHED") {
+    throw new AppError(
+      `Only dispatched trips can be completed (this trip is ${trip.status.toLowerCase()})`,
+    );
+  }
 
-    const startOdometerKm = Number(trip.vehicle.odometerKm);
-    if (input.finalOdometerKm < startOdometerKm) {
-      throw new AppError(
-        `Final odometer ${input.finalOdometerKm} km cannot be below the current ${startOdometerKm} km`,
-      );
-    }
+  const startOdometerKm = Number(trip.vehicle.odometerKm);
+  if (input.finalOdometerKm < startOdometerKm) {
+    throw new AppError(
+      `Final odometer ${input.finalOdometerKm} km cannot be below the current ${startOdometerKm} km`,
+    );
+  }
 
-    // R7: trip data recorded, vehicle odometer bumped, both actors freed
-    await tx.vehicle.update({
+  // R7: trip data recorded, vehicle odometer bumped, both actors freed
+  await prisma.vehicle.update({
+    where: { id: trip.vehicleId },
+    data: { status: "AVAILABLE", odometerKm: input.finalOdometerKm },
+  });
+  await prisma.driver.update({
+    where: { id: trip.driverId },
+    data: { status: "AVAILABLE" },
+  });
+  return prisma.trip.update({
+    where: { id },
+    data: {
+      status: "COMPLETED",
+      completedAt: new Date(),
+      actualDistanceKm: input.finalOdometerKm - startOdometerKm,
+      fuelConsumedLiters: input.fuelConsumedLiters,
+      revenue: input.revenue,
+    },
+    include: tripInclude,
+  });
+}
+
+export async function cancelTrip(id: string) {
+  const trip = await prisma.trip.findUnique({ where: { id } });
+  if (!trip) throw new AppError("Trip not found", 404);
+  if (trip.status === "COMPLETED") {
+    throw new AppError("A completed trip cannot be cancelled"); // §12
+  }
+  if (trip.status === "CANCELLED") {
+    throw new AppError("Trip is already cancelled");
+  }
+
+  // R8: cancelling a dispatched trip frees vehicle + driver; a draft needs no flips
+  if (trip.status === "DISPATCHED") {
+    await prisma.vehicle.update({
       where: { id: trip.vehicleId },
-      data: { status: "AVAILABLE", odometerKm: input.finalOdometerKm },
+      data: { status: "AVAILABLE" },
     });
-    await tx.driver.update({
+    await prisma.driver.update({
       where: { id: trip.driverId },
       data: { status: "AVAILABLE" },
     });
-    return tx.trip.update({
-      where: { id },
-      data: {
-        status: "COMPLETED",
-        completedAt: new Date(),
-        actualDistanceKm: input.finalOdometerKm - startOdometerKm,
-        fuelConsumedLiters: input.fuelConsumedLiters,
-        revenue: input.revenue,
-      },
-      include: tripInclude,
-    });
-  });
-}
+  }
 
-export function cancelTrip(id: string) {
-  return prisma.$transaction(async (tx) => {
-    const trip = await tx.trip.findUnique({ where: { id } });
-    if (!trip) throw new AppError("Trip not found", 404);
-    if (trip.status === "COMPLETED") {
-      throw new AppError("A completed trip cannot be cancelled"); // §12
-    }
-    if (trip.status === "CANCELLED") {
-      throw new AppError("Trip is already cancelled");
-    }
-
-    // R8: cancelling a dispatched trip frees vehicle + driver; a draft needs no flips
-    if (trip.status === "DISPATCHED") {
-      await tx.vehicle.update({
-        where: { id: trip.vehicleId },
-        data: { status: "AVAILABLE" },
-      });
-      await tx.driver.update({
-        where: { id: trip.driverId },
-        data: { status: "AVAILABLE" },
-      });
-    }
-
-    return tx.trip.update({
-      where: { id },
-      data: { status: "CANCELLED" },
-      include: tripInclude,
-    });
+  return prisma.trip.update({
+    where: { id },
+    data: { status: "CANCELLED" },
+    include: tripInclude,
   });
 }

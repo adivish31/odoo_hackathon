@@ -209,7 +209,7 @@ export default function RegisterForm() {
 
               <Select
                 value={role}
-                onValueChange={setRole}
+                onValueChange={(val) => setRole(val || "")}
               >
 
                 <SelectTrigger className="pl-10 h-11">

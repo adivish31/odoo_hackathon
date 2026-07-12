@@ -1,150 +1,109 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Plus, Filter } from "lucide-react";
-
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-
-const fuelLogs = [
-  {
-    vehicle: "VAN-05",
-    date: "05 Jul 2026",
-    liters: "42 L",
-    cost: "₹3,150",
-    station: "Shell Depot Central",
-    status: "Verified",
-  },
-  {
-    vehicle: "TRUCK-11",
-    date: "06 Jul 2026",
-    liters: "110 L",
-    cost: "₹8,400",
-    station: "Highway Stop 44",
-    status: "Verified",
-  },
-  {
-    vehicle: "MINI-02",
-    date: "06 Jul 2026",
-    liters: "28 L",
-    cost: "₹2,050",
-    station: "Shell Depot Central",
-    status: "Pending",
-  },
-];
+import AddFuelModal from "./add-fuel-modal";
+import { getFuelLogs, type FuelLog } from "@/services/expense.service";
 
 export default function FuelLogTable() {
+  const [logs, setLogs] = useState<FuelLog[]>([]);
+  const [showModal, setShowModal] = useState(false);
+  const [accessDenied, setAccessDenied] = useState(false);
+
+  const loadData = async () => {
+    try {
+      setAccessDenied(false);
+      const data = await getFuelLogs();
+      setLogs(data);
+    } catch (err: any) {
+      if (err.response?.status === 403) {
+        setAccessDenied(true);
+      } else {
+        console.error(err);
+      }
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   return (
-    <Card>
+    <>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Fuel Logs</CardTitle>
+          <div className="flex gap-2">
+            <Button onClick={() => setShowModal(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Log Fuel
+            </Button>
+            <Button variant="outline">
+              <Filter className="mr-2 h-4 w-4" />
+              Filter
+            </Button>
+          </div>
+        </CardHeader>
 
-      <CardHeader className="flex flex-row items-center justify-between">
-
-        <CardTitle>
-          Fuel Logs
-        </CardTitle>
-
-        <div className="flex gap-2">
-
-          <Button>
-
-            <Plus className="mr-2 h-4 w-4" />
-
-            Log Fuel
-
-          </Button>
-
-          <Button variant="outline">
-
-            <Filter className="mr-2 h-4 w-4" />
-
-            Filter
-
-          </Button>
-
-        </div>
-
-      </CardHeader>
-
-      <CardContent>
-
-        <div className="overflow-x-auto">
-
-          <table className="w-full">
-
-            <thead>
-
-              <tr className="border-b text-left text-sm text-slate-500">
-
-                <th className="pb-3">Vehicle</th>
-
-                <th className="pb-3">Date</th>
-
-                <th className="pb-3">Liters</th>
-
-                <th className="pb-3 text-right">Cost</th>
-
-                <th className="pb-3">Station</th>
-
-                <th className="pb-3">Status</th>
-
-              </tr>
-
-            </thead>
-
-            <tbody>
-
-              {fuelLogs.map((log) => (
-
-                <tr
-                  key={log.vehicle}
-                  className="border-b last:border-none hover:bg-slate-50"
-                >
-
-                  <td className="py-4 font-medium">
-                    {log.vehicle}
-                  </td>
-
-                  <td>{log.date}</td>
-
-                  <td>{log.liters}</td>
-
-                  <td className="text-right font-semibold">
-                    {log.cost}
-                  </td>
-
-                  <td>{log.station}</td>
-
-                  <td>
-
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                        log.status === "Verified"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-yellow-100 text-yellow-700"
-                      }`}
-                    >
-                      {log.status}
-                    </span>
-
-                  </td>
-
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b text-left text-sm text-slate-500">
+                  <th className="pb-3">Date</th>
+                  <th className="pb-3">Vehicle</th>
+                  <th className="pb-3">Liters</th>
+                  <th className="pb-3 text-right">Cost</th>
                 </tr>
+              </thead>
+              <tbody>
+                {accessDenied ? (
+                  <tr>
+                    <td colSpan={4} className="py-8 text-center text-slate-500 bg-red-50">
+                      You do not have permission to view fuel logs.
+                    </td>
+                  </tr>
+                ) : logs.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="py-8 text-center text-slate-500">
+                      No fuel logs recorded.
+                    </td>
+                  </tr>
+                ) : (
+                  logs.map((log) => (
+                    <tr
+                      key={log.id}
+                      className="border-b last:border-none hover:bg-slate-50"
+                    >
+                      <td className="py-4 text-sm text-slate-600">
+                        {new Date(log.date).toLocaleDateString()}
+                      </td>
+                      <td className="font-medium text-slate-900">
+                        {log.vehicle?.registrationNumber || "-"}
+                      </td>
+                      <td className="text-slate-700">
+                        {Number(log.liters).toFixed(2)} L
+                      </td>
+                      <td className="text-right font-bold text-slate-900">
+                        ₹{Number(log.cost).toLocaleString()}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
 
-              ))}
-
-            </tbody>
-
-          </table>
-
-        </div>
-
-      </CardContent>
-
-    </Card>
+      {showModal && (
+        <AddFuelModal
+          onClose={() => setShowModal(false)}
+          onSuccess={loadData}
+        />
+      )}
+    </>
   );
 }

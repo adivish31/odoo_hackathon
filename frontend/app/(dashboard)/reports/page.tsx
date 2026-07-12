@@ -11,10 +11,11 @@ import {
 } from "lucide-react";
 
 
+import ReportsExportButton from "@/components/reports/reports-export-button";
+
 export default async function ReportsPage() {
 
   const report = await getReports();
-
 
   return (
 
@@ -89,31 +90,7 @@ export default async function ReportsPage() {
           </button>
 
 
-
-
-          <button
-            className="
-            flex
-            w-full
-            sm:w-auto
-            items-center
-            justify-center
-            gap-2
-            rounded-lg
-            bg-blue-600
-            px-4
-            py-2
-            text-sm
-            text-white
-            "
-          >
-
-            <Download size={18}/>
-
-            Export CSV
-
-          </button>
-
+          <ReportsExportButton />
 
         </div>
 

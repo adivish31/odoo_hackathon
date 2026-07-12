@@ -9,13 +9,13 @@ import type {
 } from "@/types/trip";
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api",
+  baseURL: (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4005") + "/api",
 });
 
 // Attach JWT from localStorage on every request
 api.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
