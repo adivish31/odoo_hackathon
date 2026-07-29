@@ -1,4 +1,5 @@
 import { RolePermission } from "@/types/settings";
+import { Check, Eye, X } from "lucide-react";
 
 
 export default function RbacTable(
@@ -11,19 +12,13 @@ roles:RolePermission[]
 
 
 const icon=(value:string)=>{
+  if(value==="full")
+    return <Check size={16} strokeWidth={1.75} className="text-go inline" />;
 
+  if(value==="read")
+    return <Eye size={16} strokeWidth={1.75} className="text-reflect inline" />;
 
-if(value==="full")
-return "✅";
-
-
-if(value==="read")
-return "👁";
-
-
-return "❌";
-
-
+  return <X size={16} strokeWidth={1.75} className="text-stop inline" />;
 }
 
 
@@ -31,16 +26,16 @@ return "❌";
 return (
 
 <div className="
-bg-white
-border
-rounded-xl
+bg-panel
+border border-hairline
+rounded-[10px]
 overflow-hidden
 ">
 
 
-<div className="p-6 border-b">
+<div className="p-6 border-b border-hairline">
 
-<h2 className="font-bold text-xl">
+<h2 className="font-bold text-xl font-heading tracking-[0.01em]">
 Role Based Access (RBAC)
 </h2>
 
@@ -53,19 +48,19 @@ Role Based Access (RBAC)
 
 <table className="w-full">
 
-<thead className="bg-slate-100">
+<thead className="bg-panel">
 
 <tr>
 
-<th className="p-4 text-left">
+<th className="p-4 text-left font-semibold uppercase tracking-[0.08em] text-[0.75rem] text-ink-dim">
 Role
 </th>
 
-<th>Fleet</th>
-<th>Drivers</th>
-<th>Trips</th>
-<th>Expenses</th>
-<th>Analytics</th>
+<th className="font-semibold uppercase tracking-[0.08em] text-[0.75rem] text-ink-dim">Fleet</th>
+<th className="font-semibold uppercase tracking-[0.08em] text-[0.75rem] text-ink-dim">Drivers</th>
+<th className="font-semibold uppercase tracking-[0.08em] text-[0.75rem] text-ink-dim">Trips</th>
+<th className="font-semibold uppercase tracking-[0.08em] text-[0.75rem] text-ink-dim">Expenses</th>
+<th className="font-semibold uppercase tracking-[0.08em] text-[0.75rem] text-ink-dim">Analytics</th>
 
 
 </tr>
@@ -82,11 +77,11 @@ roles.map((role)=>(
 
 <tr
 key={role.role}
-className="border-t"
+className="border-t border-hairline hover:bg-panel-raised transition-colors"
 >
 
 
-<td className="p-4 font-semibold">
+<td className="p-4 font-semibold text-ink">
 {role.role}
 </td>
 

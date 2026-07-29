@@ -1,121 +1,113 @@
-import { ReportResponse } from "@/types/report";
+import axios from "axios";
+import { getToken } from "@/lib/auth-token";
+import type { ReportResponse } from "@/types/report";
 
+const api = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api",
+});
 
-export async function getReports(): Promise<ReportResponse>{
+api.interceptors.request.use((config) => {
+  const token = getToken();
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
 
+interface VehicleReport {
+  id: string;
+  registrationNumber: string;
+  nameModel: string;
+  type: string;
+  status: string;
+  distanceKm: number;
+  fuelLiters: number;
+  fuelEfficiencyKmPerL: number | null;
+  fuelCost: number;
+  maintenanceCost: number;
+  expenses: number;
+  operationalCost: number;
+  revenue: number;
+  acquisitionCost: number;
+  roi: number | null;
+}
 
-  return {
-
-    kpis:[
-      {
-        title:"Fuel Efficiency",
-        value:8.4,
-        unit:"km/l",
-        trend:"+1.2% vs last month"
-      },
-
-      {
-        title:"Fleet Utilization",
-        value:81,
-        unit:"%",
-        trend:"+4.5% vs last month"
-      },
-
-      {
-        title:"Operational Cost",
-        value:"₹34,070",
-        trend:"+8.1% vs last month"
-      },
-
-      {
-        title:"Vehicle ROI",
-        value:14.2,
-        unit:"%",
-        trend:"Steady growth"
-      }
-
-    ],
-
-
-    revenue:[
-
-      {
-        month:"Jan",
-        planned:40000,
-        actual:50000
-      },
-
-      {
-        month:"Feb",
-        planned:50000,
-        actual:60000
-      },
-
-      {
-        month:"Mar",
-        planned:45000,
-        actual:65000
-      },
-
-      {
-        month:"Apr",
-        planned:60000,
-        actual:75000
-      }
-
-    ],
-
-
-    vehicles:[
-
-      {
-        vehicleId:"TRUCK-II",
-        cost:12450
-      },
-
-      {
-        vehicleId:"MINI-03",
-        cost:8200
-      },
-
-      {
-        vehicleId:"VAN-05",
-        cost:5100
-      }
-
-    ],
-
-
-    operations:[
-
-      {
-        region:"North",
-        trips:1245,
-        fuelCost:"₹14.2/km",
-        maintenance:"12.5%",
-        status:"Optimal"
-      },
-
-
-      {
-        region:"West",
-        trips:892,
-        fuelCost:"₹16.8/km",
-        maintenance:"18.2%",
-        status:"Warning"
-      },
-
-
-      {
-        region:"South",
-        trips:1532,
-        fuelCost:"₹13.5/km",
-        maintenance:"9.1%",
-        status:"Optimal"
-      }
-
-    ]
-
+interface Summary {
+  fleet: {
+    activeVehicles: number;
+    onTripVehicles: number;
+    fleetUtilizationPct: number;
+    totalFuelLiters: number;
+    fleetFuelEfficiencyKmPerL: number | null;
+    totalOperationalCost: number;
+    totalRevenue: number;
+    fleetRoi: number | null;
   };
+  vehicles: VehicleReport[];
+}
 
+const inr = (n: number) => `₹${Math.round(n).toLocaleString("en-IN")}`;
+
+export async function getReports(): Promise<ReportResponse> {
+  const { data } = await api.get<Summary>("/reports/summary");
+  const f = data.fleet;
+
+  const kpis = [
+    {
+      title: "Fuel Efficiency",
+      value: f.fleetFuelEfficiencyKmPerL ?? 0,
+      unit: "km/l",
+      trend: `${Math.round(f.totalFuelLiters).toLocaleString("en-IN")} L used`,
+    },
+    {
+      title: "Fleet Utilization",
+      value: f.fleetUtilizationPct,
+      unit: "%",
+      trend: `${f.onTripVehicles}/${f.activeVehicles} on trip`,
+    },
+    {
+      title: "Operational Cost",
+      value: inr(f.totalOperationalCost),
+      trend: "fuel + maintenance + expenses",
+    },
+    {
+      title: "Vehicle ROI",
+      value: f.fleetRoi != null ? Number((f.fleetRoi * 100).toFixed(1)) : 0,
+      unit: "%",
+      trend: `revenue ${inr(f.totalRevenue)}`,
+    },
+  ];
+
+  const active = data.vehicles.filter((v) => v.operationalCost > 0 || v.revenue > 0);
+
+  const revenue = active.map((v) => ({
+    month: v.registrationNumber,
+    planned: Math.round(v.operationalCost),
+    actual: Math.round(v.revenue),
+  }));
+
+  const vehicles = [...data.vehicles]
+    .sort((a, b) => b.operationalCost - a.operationalCost)
+    .slice(0, 5)
+    .map((v) => ({ vehicleId: v.registrationNumber, cost: Math.round(v.operationalCost) }));
+
+  const operations = active.slice(0, 6).map((v) => ({
+    region: v.registrationNumber,
+    trips: Math.round(v.distanceKm),
+    fuelCost: inr(v.fuelCost),
+    maintenance: inr(v.maintenanceCost),
+    status: v.status,
+  }));
+
+  return { kpis, revenue, vehicles, operations };
+}
+
+export async function downloadReportCsv(): Promise<void> {
+  const res = await api.get("/reports/export.csv", { responseType: "blob" });
+  const url = URL.createObjectURL(res.data as Blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "transitops-report.csv";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }

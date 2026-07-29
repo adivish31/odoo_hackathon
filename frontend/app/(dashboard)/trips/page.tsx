@@ -22,6 +22,8 @@ import type {
   TripCompleteInput,
 } from "@/types/trip";
 
+import PageHeader from "@/components/layout/page-header";
+
 export default function TripsPage() {
   /* ── State ── */
   const [trips, setTrips] = useState<Trip[]>([]);
@@ -103,35 +105,30 @@ export default function TripsPage() {
   return (
     <div className="space-y-6">
       {/* ═══ Header ═══ */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 flex items-center gap-3">
-            <Route size={28} className="text-blue-600" />
-            Trip Dispatcher
-          </h1>
-          <p className="text-sm md:text-base text-slate-500 mt-1">
-            Create, dispatch, and manage trips across your fleet.
-          </p>
-        </div>
-
-        <div className="flex flex-col sm:flex-row gap-3">
-          {/* Quick stats */}
-          <div className="flex items-center gap-4 text-sm">
-            <div className="flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full font-semibold">
-              <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-              {activeCount} Active
+      <PageHeader
+        title="Trip Dispatcher"
+        description="Create, dispatch, and manage trips across your fleet."
+        icon={Route}
+        actions={
+          <>
+            {/* Quick stats */}
+            <div className="flex items-center gap-4 text-sm mr-2">
+              <div className="flex items-center gap-2 bg-reflect/10 text-reflect border border-reflect/20 px-3 py-1.5 rounded-full font-semibold">
+                <span className="w-2 h-2 rounded-full bg-reflect animate-pulse" />
+                {activeCount} Active
+              </div>
+              <div className="flex items-center gap-2 bg-caution/10 text-caution border border-caution/20 px-3 py-1.5 rounded-full font-semibold">
+                {draftCount} Draft
+              </div>
             </div>
-            <div className="flex items-center gap-2 bg-amber-50 text-amber-700 px-3 py-1.5 rounded-full font-semibold">
-              {draftCount} Draft
-            </div>
-          </div>
 
-          <button className="flex items-center justify-center gap-2 rounded-lg border bg-white px-4 py-2 text-sm hover:bg-slate-50 transition-colors">
-            <Download size={18} />
-            Export
-          </button>
-        </div>
-      </div>
+            <button className="flex items-center justify-center gap-2 rounded-[6px] border border-hairline bg-panel-raised px-4 py-2 text-sm text-ink hover:bg-panel transition-colors">
+              <Download size={18} />
+              Export
+            </button>
+          </>
+        }
+      />
 
       {/* ═══ Error banner ═══ */}
       {error && (

@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 
 import { register } from "@/services/auth";
+import { apiError } from "@/lib/api-error";
+import { setAuth } from "@/lib/auth-token";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -58,25 +60,15 @@ export default function RegisterForm() {
       );
 
 
-      localStorage.setItem(
-        "token",
-        data.token
-      );
-
-
-      localStorage.setItem(
-        "user",
-        JSON.stringify(data.user)
-      );
-
+      setAuth(data.token, data.user, true);
 
       router.push("/dashboard");
 
 
-    }catch(err:any){
+    }catch(err){
 
       setError(
-        err.message || "Registration failed"
+        apiError(err, "Registration failed")
       );
 
     }
@@ -209,7 +201,7 @@ export default function RegisterForm() {
 
               <Select
                 value={role}
-                onValueChange={setRole}
+                onValueChange={(value) => setRole(value ?? "")}
               >
 
                 <SelectTrigger className="pl-10 h-11">

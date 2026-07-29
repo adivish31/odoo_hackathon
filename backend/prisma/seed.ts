@@ -59,6 +59,20 @@ async function main() {
   await prisma.vehicle.create({
     data: { registrationNumber: "MH-06-KL-1122", nameModel: "Old Tempo — Van-99", type: "van", maxLoadCapacityKg: 400, odometerKm: 150000, acquisitionCost: 600000, region: "West", status: "RETIRED" },
   });
+  
+  // Extra seed data for larger mock dataset
+  await prisma.vehicle.createMany({
+    data: [
+      { registrationNumber: "MH-12-AB-9999", nameModel: "Tata 407", type: "truck", maxLoadCapacityKg: 2500, odometerKm: 85000, acquisitionCost: 1200000, region: "South", status: "AVAILABLE" },
+      { registrationNumber: "MH-14-XY-8888", nameModel: "Eicher Pro", type: "truck", maxLoadCapacityKg: 7000, odometerKm: 120000, acquisitionCost: 1800000, region: "East", status: "AVAILABLE" },
+      { registrationNumber: "MH-01-ZZ-1111", nameModel: "Maruti Eeco", type: "van", maxLoadCapacityKg: 600, odometerKm: 25000, acquisitionCost: 500000, region: "West", status: "AVAILABLE" },
+      { registrationNumber: "MH-02-EE-2222", nameModel: "Ashok Leyland Dost", type: "van", maxLoadCapacityKg: 1250, odometerKm: 45000, acquisitionCost: 700000, region: "North", status: "ON_TRIP" },
+      { registrationNumber: "MH-43-WW-3333", nameModel: "Tata Signa", type: "truck", maxLoadCapacityKg: 40000, odometerKm: 210000, acquisitionCost: 3500000, region: "West", status: "IN_SHOP" },
+      { registrationNumber: "MH-04-UU-4444", nameModel: "Hero Honda Splendor", type: "bike", maxLoadCapacityKg: 80, odometerKm: 55000, acquisitionCost: 60000, region: "South", status: "RETIRED" },
+      { registrationNumber: "MH-15-VV-5555", nameModel: "Mahindra Supro", type: "van", maxLoadCapacityKg: 850, odometerKm: 12000, acquisitionCost: 550000, region: "East", status: "AVAILABLE" },
+      { registrationNumber: "MH-12-QQ-6666", nameModel: "BharatBenz", type: "truck", maxLoadCapacityKg: 12000, odometerKm: 98000, acquisitionCost: 2800000, region: "North", status: "AVAILABLE" },
+    ],
+  });
 
   // ---------- Drivers (incl. 1 expired-license + 1 suspended) ----------
   const alex = await prisma.driver.create({
@@ -75,6 +89,18 @@ async function main() {
   });
   await prisma.driver.create({
     data: { name: "Deepak Singh", licenseNumber: "DL-0820110149650", licenseCategory: "truck", licenseExpiryDate: daysFromNow(365), contactNumber: "9876543214", safetyScore: 40, status: "SUSPENDED" },
+  });
+
+  await prisma.driver.createMany({
+    data: [
+      { name: "Rahul Gupta", licenseNumber: "DL-1120220149001", licenseCategory: "truck", licenseExpiryDate: daysFromNow(400), contactNumber: "9123456780", safetyScore: 92, status: "AVAILABLE" },
+      { name: "Amit Kumar", licenseNumber: "DL-1220220149002", licenseCategory: "van", licenseExpiryDate: daysFromNow(500), contactNumber: "9123456781", safetyScore: 85, status: "ON_TRIP" },
+      { name: "Suresh Nair", licenseNumber: "DL-1320220149003", licenseCategory: "truck", licenseExpiryDate: daysFromNow(150), contactNumber: "9123456782", safetyScore: 78, status: "OFF_DUTY" },
+      { name: "Vikram Singh", licenseNumber: "DL-1420220149004", licenseCategory: "bus", licenseExpiryDate: daysFromNow(60), contactNumber: "9123456783", safetyScore: 98, status: "AVAILABLE" },
+      { name: "Neha Joshi", licenseNumber: "DL-1520220149005", licenseCategory: "van", licenseExpiryDate: daysFromNow(200), contactNumber: "9123456784", safetyScore: 100, status: "AVAILABLE" },
+      { name: "Mohammad Ali", licenseNumber: "DL-1620220149006", licenseCategory: "bike", licenseExpiryDate: daysFromNow(30), contactNumber: "9123456785", safetyScore: 65, status: "AVAILABLE" },
+      { name: "Kiran Rao", licenseNumber: "DL-1720220149007", licenseCategory: "truck", licenseExpiryDate: daysFromNow(-10), contactNumber: "9123456786", safetyScore: 50, status: "AVAILABLE" },
+    ],
   });
 
   // ---------- Completed trips (drive Reports numbers) ----------
@@ -135,7 +161,7 @@ async function main() {
   console.log("    dispatch@transitops.com  (DISPATCHER)");
   console.log("    safety@transitops.com    (SAFETY_OFFICER)");
   console.log("    finance@transitops.com   (FINANCIAL_ANALYST)");
-  console.log("  6 vehicles (1 in-shop, 1 retired), 5 drivers (1 expired license, 1 suspended)");
+  console.log("  14 vehicles (2 in-shop, 2 retired), 12 drivers (2 expired license, 1 suspended)");
   console.log("  3 trips (2 completed, 1 draft), 4 fuel logs, 2 maintenance logs, 3 expenses");
 }
 

@@ -19,9 +19,9 @@ const scopes = [
 
 export default function AccessScope() {
   return (
-    <div className="mt-8 border-t pt-6">
+    <div className="mt-8 border-t border-hairline pt-6">
 
-      <p className="mb-5 text-xs font-semibold uppercase tracking-widest text-slate-500">
+      <p className="mb-5 text-xs font-semibold uppercase tracking-widest text-ink-dim">
         Access Scope
       </p>
 
@@ -30,16 +30,16 @@ export default function AccessScope() {
         {scopes.map((item) => (
           <div
             key={item.role}
-            className="flex items-start gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3"
+            className="flex items-start gap-3 rounded-lg border border-hairline bg-panel-raised p-3"
           >
-            <div className="mt-1 h-2.5 w-2.5 rounded-full bg-blue-600" />
+            <div className="mt-1 h-2.5 w-2.5 rounded-full bg-reflect shrink-0" />
 
             <div>
-              <h4 className="font-semibold text-slate-900">
+              <h4 className="font-semibold text-ink">
                 {item.role}
               </h4>
 
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-ink-dim">
                 {item.access}
               </p>
             </div>

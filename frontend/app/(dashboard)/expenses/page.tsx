@@ -2,7 +2,7 @@ import ExpenseHeader from "@/components/expenses/expense-header";
 import FuelLogTable from "@/components/expenses/fuel-log-table";
 import ExpenseTable from "@/components/expenses/expense-table";
 import ExpenseSummary from "@/components/expenses/expense-summary";
-import PlaceholderCards from "@/components/expenses/placeholder-cards";
+import ExpenseCharts from "@/components/expenses/expense-charts";
 
 export default function ExpensesPage() {
   return (
@@ -16,7 +16,7 @@ export default function ExpensesPage() {
 
       <ExpenseSummary />
 
-      <PlaceholderCards />
+      <ExpenseCharts />
 
     </div>
   );

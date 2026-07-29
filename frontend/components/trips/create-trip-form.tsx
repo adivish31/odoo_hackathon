@@ -7,6 +7,7 @@ import {
   getAvailableVehicles,
   getAvailableDrivers,
 } from "@/services/trip.service";
+import { apiError } from "@/lib/api-error";
 
 interface Props {
   onTripCreated: () => void;
@@ -118,10 +119,8 @@ export default function CreateTripForm({
         plannedDistanceKm: "",
       });
       onTripCreated();
-    } catch (err: any) {
-      setError(
-        err?.response?.data?.error || err?.message || "Failed to create trip.",
-      );
+    } catch (err) {
+      setError(apiError(err, "Failed to create trip."));
     }
   }
 
@@ -131,20 +130,20 @@ export default function CreateTripForm({
   });
 
   const inputClass =
-    "mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all";
+    "mt-1 w-full rounded-[6px] border border-hairline bg-panel-raised px-3 py-2.5 text-[0.9375rem] text-ink focus:border-amber focus:ring-1 focus:ring-amber outline-none transition-all placeholder:text-ink-faint";
 
   return (
-    <div className="bg-white border rounded-xl p-6 space-y-5">
+    <div className="bg-panel border border-hairline rounded-[10px] p-6 space-y-5">
       {/* Title */}
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-slate-900">Create Trip</h2>
-        <Send size={20} className="text-slate-400" />
+        <h2 className="text-xl font-bold font-heading text-ink">Create Trip</h2>
+        <Send size={20} className="text-ink-dim" />
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Source */}
         <div>
-          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+          <label className="text-[0.75rem] font-semibold text-ink-dim uppercase tracking-[0.08em]">
             Source
           </label>
           <input
@@ -158,7 +157,7 @@ export default function CreateTripForm({
 
         {/* Destination */}
         <div>
-          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+          <label className="text-[0.75rem] font-semibold text-ink-dim uppercase tracking-[0.08em]">
             Destination
           </label>
           <input
@@ -172,7 +171,7 @@ export default function CreateTripForm({
 
         {/* Vehicle (available only) */}
         <div>
-          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+          <label className="text-[0.75rem] font-semibold text-ink-dim uppercase tracking-[0.08em]">
             Vehicle (available only)
           </label>
           <select
@@ -193,7 +192,7 @@ export default function CreateTripForm({
 
         {/* Driver (available only) */}
         <div>
-          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+          <label className="text-[0.75rem] font-semibold text-ink-dim uppercase tracking-[0.08em]">
             Driver (available only)
           </label>
           <select
@@ -213,7 +212,7 @@ export default function CreateTripForm({
 
         {/* Cargo Weight */}
         <div>
-          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+          <label className="text-[0.75rem] font-semibold text-ink-dim uppercase tracking-[0.08em]">
             Cargo Weight (kg)
           </label>
           <input
@@ -228,7 +227,7 @@ export default function CreateTripForm({
 
         {/* Planned Distance */}
         <div>
-          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+          <label className="text-[0.75rem] font-semibold text-ink-dim uppercase tracking-[0.08em]">
             Planned Distance (km)
           </label>
           <input
@@ -245,11 +244,11 @@ export default function CreateTripForm({
         {selectedVehicle && cargoNum > 0 && (
           <div
             className={`
-              rounded-lg border px-4 py-3 text-sm
+              rounded-[6px] border px-4 py-3 text-sm
               ${
                 overweight
-                  ? "bg-red-950/5 border-red-400 text-red-700"
-                  : "bg-emerald-50 border-emerald-300 text-emerald-700"
+                  ? "bg-stop/10 border-stop/30 text-stop"
+                  : "bg-go/10 border-go/30 text-go"
               }
             `}
           >
@@ -261,7 +260,7 @@ export default function CreateTripForm({
             </p>
             {overweight ? (
               <p className="flex items-center gap-1.5 mt-1 font-bold">
-                <XCircle size={16} className="text-red-600" />
+                <XCircle size={16} className="text-stop" />
                 Capacity exceeded by {overweightAmount} kg — dispatch blocked
               </p>
             ) : (
@@ -274,7 +273,7 @@ export default function CreateTripForm({
 
         {/* Error display */}
         {error && (
-          <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 flex items-start gap-2">
+          <div className="rounded-[6px] bg-stop/10 border border-stop/30 px-4 py-3 text-sm text-stop flex items-start gap-2">
             <AlertTriangle size={16} className="mt-0.5 shrink-0" />
             {error}
           </div>
@@ -286,11 +285,11 @@ export default function CreateTripForm({
             type="submit"
             disabled={overweight || loading}
             className={`
-              flex-1 rounded-lg py-3 text-sm font-semibold transition-all
+              flex-1 rounded-[6px] py-3 text-[0.9375rem] font-semibold transition-all
               ${
                 overweight || loading
-                  ? "bg-slate-300 text-slate-500 cursor-not-allowed"
-                  : "bg-blue-600 text-white hover:bg-blue-700 active:scale-[0.98]"
+                  ? "bg-panel-raised text-ink-faint border border-hairline cursor-not-allowed"
+                  : "bg-amber text-[#1A1300] hover:brightness-110 active:scale-[0.98]"
               }
             `}
           >
@@ -309,7 +308,7 @@ export default function CreateTripForm({
                 plannedDistanceKm: "",
               })
             }
-            className="flex-1 rounded-lg border border-red-300 py-3 text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors"
+            className="flex-1 rounded-[6px] border border-stop/50 py-3 text-[0.9375rem] font-semibold text-stop hover:bg-stop/10 transition-colors"
           >
             Cancel
           </button>
@@ -317,7 +316,7 @@ export default function CreateTripForm({
       </form>
 
       {/* Info note */}
-      <div className="rounded-lg bg-slate-50 border border-slate-200 p-4 text-xs text-slate-500 leading-relaxed">
+      <div className="rounded-[6px] bg-panel-raised border border-hairline p-4 text-[0.75rem] text-ink-dim leading-relaxed">
         On Complete: odometer → fuel log → expenses → Vehicle & Driver Available.
       </div>
     </div>

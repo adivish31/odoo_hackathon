@@ -6,7 +6,7 @@ export default function LoginPage() {
     <div className="flex min-h-screen">
       <AuthSidebar />
 
-      <main className="flex-1 flex items-center justify-center bg-slate-50 p-8">
+      <main className="flex-1 flex items-center justify-center bg-bitumen p-8">
         <LoginForm />
       </main>
     </div>

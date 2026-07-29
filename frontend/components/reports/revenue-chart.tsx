@@ -23,10 +23,10 @@ export default function RevenueChart({ data }: Props) {
 
   return (
 
-    <div className="bg-white border rounded-xl p-6">
+    <div className="bg-panel border border-hairline rounded-[10px] p-6">
 
 
-      <h2 className="text-lg font-semibold mb-6">
+      <h2 className="text-lg font-bold font-heading text-ink mb-6">
         Monthly Revenue
       </h2>
 
@@ -42,32 +42,42 @@ export default function RevenueChart({ data }: Props) {
 
             <XAxis
               dataKey="month"
+              tick={{ fill: "var(--ink-dim)", fontSize: 12 }}
+              axisLine={false}
+              tickLine={false}
             />
 
 
-            <YAxis />
+            <YAxis 
+              tick={{ fill: "var(--ink-dim)", fontSize: 12 }}
+              axisLine={false}
+              tickLine={false}
+            />
 
 
-            <Tooltip />
+            <Tooltip 
+               cursor={{ fill: "var(--panel-raised)" }}
+               contentStyle={{ backgroundColor: "var(--panel)", borderColor: "var(--hairline)", color: "var(--ink)", borderRadius: "6px" }}
+            />
 
 
-            <Legend />
+            <Legend wrapperStyle={{ color: "var(--ink)" }} />
 
 
 
             <Bar
               dataKey="planned"
               name="Planned"
-              fill="#94a3b8"
-              radius={[6,6,0,0]}
+              fill="var(--ink-faint, #4B5563)"
+              radius={[4,4,0,0]}
             />
 
 
             <Bar
               dataKey="actual"
               name="Actual"
-              fill="#2563eb"
-              radius={[6,6,0,0]}
+              fill="var(--reflect)"
+              radius={[4,4,0,0]}
             />
 
 

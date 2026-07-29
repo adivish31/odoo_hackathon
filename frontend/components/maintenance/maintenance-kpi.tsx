@@ -1,4 +1,5 @@
-import { MaintenanceKPI } from "@/types/maintenance";
+import type { ElementType } from "react";
+import type { MaintenanceKPI } from "@/types/maintenance";
 import {
   CreditCard,
   Factory,
@@ -6,7 +7,7 @@ import {
 } from "lucide-react";
 
 
-const icons:any={
+const icons: Record<string, ElementType> = {
  payments:CreditCard,
  precision_manufacturing:Factory,
  warning:AlertTriangle
@@ -65,9 +66,10 @@ const Icon=icons[item.icon] || CreditCard;
 return(
 
 <div className="
-bg-white
+bg-panel
 border
-rounded-xl
+border-hairline
+rounded-[10px]
 p-5
 flex
 justify-between
@@ -78,17 +80,21 @@ items-center
 <div>
 
 <p className="
-text-xs
-text-slate-500
+text-[0.75rem]
+text-ink-dim
 uppercase
+font-semibold
+tracking-[0.08em]
 ">
 {item.title}
 </p>
 
 
 <h3 className="
-text-2xl
+text-3xl
 font-bold
+font-heading
+text-ink
 mt-2
 ">
 {item.value}
@@ -100,7 +106,7 @@ mt-2
 
 <Icon
 size={38}
-className="text-blue-600 opacity-30"
+className="text-reflect opacity-30"
 />
 
 

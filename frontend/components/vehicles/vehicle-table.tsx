@@ -2,6 +2,8 @@
 
 import { Ban, Edit2 } from "lucide-react";
 import type { Vehicle, VehicleStatus } from "@/types/vehicle";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { PlateChip } from "@/components/ui/plate-chip";
 
 interface Props {
   vehicles: Vehicle[];
@@ -9,87 +11,71 @@ interface Props {
   onRetire: (id: string) => void;
 }
 
-const statusColors: Record<VehicleStatus, string> = {
-  AVAILABLE: "bg-emerald-500 text-white",
-  ON_TRIP: "bg-blue-400 text-white",
-  IN_SHOP: "bg-amber-500 text-white",
-  RETIRED: "bg-red-400 text-white",
-};
-
 export default function VehicleTable({ vehicles, onEdit, onRetire }: Props) {
   if (vehicles.length === 0) {
     return (
-      <div className="bg-[#1e1e1e] border border-white/10 rounded-xl p-12 text-center text-slate-400">
-        <p className="text-sm">No vehicles found.</p>
+      <div className="bg-panel border border-hairline rounded-[10px] p-12 text-center text-ink-dim">
+        <p className="font-heading text-xl font-semibold uppercase tracking-[0.01em]">No vehicles found.</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-[#1e1e1e] border border-white/10 rounded-xl overflow-hidden shadow-xl">
+    <div className="bg-panel border border-hairline rounded-[10px] overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm whitespace-nowrap">
-          <thead className="text-slate-400 border-b border-white/10 text-xs tracking-wider uppercase">
+        <table className="w-full text-left whitespace-nowrap">
+          <thead className="bg-panel border-b border-hairline text-[0.75rem] font-semibold uppercase tracking-[0.08em] text-ink-dim">
             <tr>
-              <th className="px-6 py-4 font-medium">Reg. No. (Unique)</th>
-              <th className="px-6 py-4 font-medium">Name/Model</th>
-              <th className="px-6 py-4 font-medium">Type</th>
-              <th className="px-6 py-4 font-medium">Capacity</th>
-              <th className="px-6 py-4 font-medium">Odometer</th>
-              <th className="px-6 py-4 font-medium">Acq. Cost</th>
-              <th className="px-6 py-4 font-medium">Status</th>
-              <th className="px-6 py-4 font-medium text-right">Actions</th>
+              <th className="px-6 py-4">Reg. No.</th>
+              <th className="px-6 py-4">Name/Model</th>
+              <th className="px-6 py-4">Type</th>
+              <th className="px-6 py-4">Capacity</th>
+              <th className="px-6 py-4 text-right">Odometer</th>
+              <th className="px-6 py-4 text-right">Acq. Cost</th>
+              <th className="px-6 py-4">Status</th>
+              <th className="px-6 py-4 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/5 text-slate-200">
+          <tbody className="divide-y divide-hairline text-[0.9375rem] text-ink">
             {vehicles.map((vehicle) => (
               <tr
                 key={vehicle.id}
-                className="hover:bg-white/5 transition-colors"
+                className="hover:bg-panel-raised transition-colors h-[44px]"
               >
-                <td className="px-6 py-4 font-medium">{vehicle.registrationNumber}</td>
-                <td className="px-6 py-4">{vehicle.nameModel}</td>
-                <td className="px-6 py-4 capitalize">{vehicle.type}</td>
-                <td className="px-6 py-4">
+                <td className="px-6 py-2">
+                  <PlateChip registrationNumber={vehicle.registrationNumber} />
+                </td>
+                <td className="px-6 py-2">{vehicle.nameModel}</td>
+                <td className="px-6 py-2 capitalize">{vehicle.type}</td>
+                <td className="px-6 py-2">
                   {vehicle.maxLoadCapacityKg >= 1000
                     ? `${(vehicle.maxLoadCapacityKg / 1000).toFixed(1)} Ton`
                     : `${vehicle.maxLoadCapacityKg} kg`}
                 </td>
-                <td className="px-6 py-4">
-                  {Number(vehicle.odometerKm).toLocaleString()}
+                <td className="px-6 py-2 tabular-nums text-right font-mono font-medium">
+                  {Number(vehicle.odometerKm).toLocaleString()} km
                 </td>
-                <td className="px-6 py-4">
-                  {Number(vehicle.acquisitionCost).toLocaleString()}
+                <td className="px-6 py-2 tabular-nums text-right font-mono font-medium">
+                  ₹{Number(vehicle.acquisitionCost).toLocaleString()}
                 </td>
-                <td className="px-6 py-4">
-                  <span
-                    className={`inline-flex px-3 py-1 text-xs font-semibold rounded-md ${
-                      statusColors[vehicle.status]
-                    }`}
-                  >
-                    {vehicle.status === "ON_TRIP"
-                      ? "On Trip"
-                      : vehicle.status === "IN_SHOP"
-                        ? "In Shop"
-                        : vehicle.status.charAt(0) +
-                          vehicle.status.slice(1).toLowerCase()}
-                  </span>
+                <td className="px-6 py-2">
+                  <StatusBadge status={vehicle.status} />
                 </td>
-                <td className="px-6 py-4 text-right flex justify-end gap-2">
+                <td className="px-6 py-2 text-right flex justify-end gap-2 items-center h-full">
                   <button
                     onClick={() => onEdit(vehicle)}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                    className="p-1.5 rounded-[6px] text-ink-dim hover:text-ink hover:bg-panel-raised transition-colors"
                     title="Edit"
                   >
-                    <Edit2 size={16} />
+                    <Edit2 size={16} strokeWidth={1.75} />
                   </button>
                   {vehicle.status !== "RETIRED" && (
                     <button
                       onClick={() => onRetire(vehicle.id)}
-                      className="p-1.5 rounded-lg text-red-400 hover:text-white hover:bg-red-500/20 transition-colors"
+                      className="p-1.5 rounded-[6px] text-stop hover:bg-stop/10 transition-colors"
                       title="Retire"
                     >
-                      <Ban size={16} />
+                      <Ban size={16} strokeWidth={1.75} />
                     </button>
                   )}
                 </td>

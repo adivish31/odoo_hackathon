@@ -12,18 +12,8 @@ import {
 } from "lucide-react";
 import type { Trip, TripStatus, TripCompleteInput } from "@/types/trip";
 import CompleteTripModal from "./complete-trip-modal";
-
-/* ── Status badge config ── */
-const badgeStyles: Record<TripStatus, string> = {
-  DISPATCHED:
-    "bg-blue-500 text-white",
-  DRAFT:
-    "bg-slate-600 text-slate-100",
-  COMPLETED:
-    "bg-emerald-500 text-white",
-  CANCELLED:
-    "bg-red-500 text-white",
-};
+import { StatusBadge } from "@/components/ui/status-badge";
+import { PlateChip } from "@/components/ui/plate-chip";
 
 function timeAgo(dateStr: string | null): string {
   if (!dateStr) return "";
@@ -73,23 +63,23 @@ export default function LiveBoard({
       <div className="space-y-4">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <h2 className="text-xl font-bold font-heading text-ink flex items-center gap-2">
+            <span className="inline-block w-2 h-2 rounded-full bg-reflect animate-pulse" />
             Live Board
           </h2>
 
           {/* Filter tabs */}
-          <div className="flex gap-1 bg-slate-100 rounded-lg p-1">
+          <div className="flex gap-1 bg-bitumen border border-hairline rounded-[6px] p-1">
             {filterTabs.map((tab) => (
               <button
                 key={tab.key}
                 onClick={() => onFilterChange(tab.key)}
                 className={`
-                  px-3 py-1.5 rounded-md text-xs font-medium transition-all
+                  px-3 py-[6px] rounded-[4px] text-[0.75rem] font-semibold tracking-[0.08em] uppercase transition-all
                   ${
                     statusFilter === tab.key
-                      ? "bg-white text-slate-900 shadow-sm"
-                      : "text-slate-500 hover:text-slate-700"
+                      ? "bg-panel-raised text-ink shadow-sm"
+                      : "text-ink-dim hover:text-ink hover:bg-panel"
                   }
                 `}
               >
@@ -101,9 +91,9 @@ export default function LiveBoard({
 
         {/* Trip cards */}
         {filtered.length === 0 ? (
-          <div className="bg-white border rounded-xl p-12 text-center text-slate-400">
+          <div className="bg-panel border border-hairline rounded-[10px] p-12 text-center text-ink-dim">
             <MapPin size={40} className="mx-auto mb-3 opacity-40" />
-            <p className="text-sm">No trips to show.</p>
+            <p className="font-heading text-xl font-semibold uppercase tracking-[0.01em]">No trips to show.</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -158,83 +148,59 @@ function TripCard({
 
   return (
     <div
-      className={`
-        rounded-xl border overflow-hidden transition-all duration-200
-        hover:shadow-md
-        ${
-          isDispatched
-            ? "bg-slate-800 text-white border-slate-700"
-            : isDraft
-              ? "bg-slate-700 text-slate-100 border-slate-600"
-              : trip.status === "CANCELLED"
-                ? "bg-white border-red-200"
-                : "bg-white border-emerald-200"
-        }
-      `}
+      className="bg-panel border border-hairline rounded-[10px] overflow-hidden transition-all duration-200 hover:bg-panel-raised"
     >
       <div className="p-4">
         {/* Top row: ID + Vehicle/Driver */}
         <div className="flex items-start justify-between">
           <div className="space-y-1">
-            <p
-              className={`text-xs font-mono font-bold ${isDone ? "text-slate-500" : "text-slate-400"}`}
-            >
+            <p className="text-[0.875rem] font-mono font-medium text-ink-dim">
               TR-{shortId}
             </p>
-            <p className="font-semibold text-sm">
+            <p className="font-semibold text-[0.9375rem] text-ink">
               {trip.source}{" "}
-              <span className={isDone ? "text-slate-400" : "text-slate-400"}>
-                →
-              </span>{" "}
+              <span className="text-amber mx-1">→</span>{" "}
               {trip.destination}
             </p>
           </div>
 
-          <div className="text-right text-xs space-y-1">
+          <div className="text-right text-[0.875rem] space-y-1">
             {trip.vehicle && (
-              <p className="flex items-center gap-1 justify-end">
-                <Truck size={12} className="opacity-60" />
-                <span className={isDone ? "text-slate-500" : ""}>
-                  {trip.vehicle.registrationNumber}
-                </span>
-              </p>
+              <div className="flex items-center gap-2 justify-end">
+                <Truck size={14} className="text-ink-dim" strokeWidth={1.75} />
+                <PlateChip registrationNumber={trip.vehicle.registrationNumber} />
+              </div>
             )}
             {trip.driver && (
-              <p className="flex items-center gap-1 justify-end">
-                <User size={12} className="opacity-60" />
-                <span className={isDone ? "text-slate-500" : ""}>
-                  {trip.driver.name}
-                </span>
+              <p className="flex items-center gap-2 justify-end text-ink">
+                <User size={14} className="text-ink-dim" strokeWidth={1.75} />
+                <span>{trip.driver.name}</span>
               </p>
             )}
           </div>
         </div>
 
+        {/* Center-Line Stepper Motif (Simplified) */}
+        <div className="my-4 relative h-[2px] bg-transparent w-full border-t-[2px] border-dashed border-amber/40">
+           {/* In a fuller implementation, this would contain the actual circles and dynamic statuses */}
+        </div>
+
         {/* Middle row: Status badge + meta */}
         <div className="flex items-center justify-between mt-3">
-          <span
-            className={`
-              inline-flex items-center px-3 py-1 rounded-full text-xs font-bold
-              ${badgeStyles[trip.status]}
-            `}
-          >
-            {trip.status.charAt(0) + trip.status.slice(1).toLowerCase()}
-          </span>
+          <StatusBadge status={trip.status} />
 
-          <div
-            className={`text-xs flex items-center gap-1 ${isDone ? "text-slate-400" : "text-slate-400"}`}
-          >
+          <div className="text-[0.875rem] font-medium text-ink flex items-center gap-1.5">
             {isDispatched && trip.dispatchedAt && (
               <>
-                <Clock size={12} />
-                {timeAgo(trip.dispatchedAt)}
+                <Clock size={14} strokeWidth={1.75} className="text-ink-dim" />
+                <span>{timeAgo(trip.dispatchedAt)}</span>
               </>
             )}
             {isDraft && (
-              <span className="text-amber-400">Awaiting dispatch</span>
+              <span className="text-caution">Awaiting dispatch</span>
             )}
             {trip.status === "COMPLETED" && (
-              <span className="text-emerald-600 font-medium">
+              <span className="text-go">
                 {Number(trip.actualDistanceKm || 0).toFixed(0)} km travelled
               </span>
             )}
@@ -243,30 +209,30 @@ function TripCard({
 
         {/* Action buttons */}
         {!isDone && (
-          <div className="flex gap-2 mt-4 pt-3 border-t border-white/10">
+          <div className="flex gap-2 mt-4 pt-4 border-t border-hairline">
             {isDraft && (
               <button
                 onClick={() => onDispatch(trip.id)}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold transition-colors"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-[6px] bg-amber text-[#1A1300] hover:brightness-110 active:translate-y-[1px] text-[0.875rem] font-semibold transition-all"
               >
-                <Play size={14} />
+                <Play size={16} strokeWidth={1.75} />
                 Dispatch
               </button>
             )}
             {isDispatched && (
               <button
                 onClick={onComplete}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold transition-colors"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-[6px] border border-hairline bg-transparent text-ink hover:bg-panel-raised text-[0.875rem] font-semibold transition-colors"
               >
-                <CheckCircle2 size={14} />
+                <CheckCircle2 size={16} strokeWidth={1.75} />
                 Complete
               </button>
             )}
             <button
               onClick={() => onCancel(trip.id)}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-red-400/50 text-red-400 hover:bg-red-500/10 text-xs font-semibold transition-colors"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-[6px] border border-stop text-stop bg-transparent hover:bg-stop/10 text-[0.875rem] font-semibold transition-colors ml-auto"
             >
-              <Ban size={14} />
+              <Ban size={16} strokeWidth={1.75} />
               Cancel
             </button>
           </div>

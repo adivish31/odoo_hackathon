@@ -19,7 +19,7 @@ export default function DashboardLayout({
           className="
           flex-1
           overflow-auto
-          bg-slate-100
+          bg-bitumen
           p-4
           md:p-6
           "

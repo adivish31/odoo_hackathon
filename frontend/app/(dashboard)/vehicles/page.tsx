@@ -7,6 +7,8 @@ import AddVehicleModal from "@/components/vehicles/add-vehicle-modal";
 import { getVehicles, createVehicle, updateVehicle, retireVehicle } from "@/services/vehicle.service";
 import type { Vehicle, VehicleType, VehicleStatus, VehicleCreateInput, VehicleListFilters } from "@/types/vehicle";
 
+import PageHeader from "@/components/layout/page-header";
+
 export default function VehiclesPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(false);
@@ -80,18 +82,11 @@ export default function VehiclesPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 flex items-center gap-3">
-            <CarFront size={28} className="text-amber-600" />
-            Vehicle Registry
-          </h1>
-          <p className="text-sm md:text-base text-slate-500 mt-1">
-            Manage your fleet of trucks, vans, bikes, and buses.
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title="Vehicle Registry"
+        description="Manage your fleet of trucks, vans, bikes, and buses."
+        icon={CarFront}
+      />
 
       {/* Filters & Actions Bar */}
       <div className="bg-[#1e1e1e] border border-white/10 rounded-xl p-4 flex flex-col sm:flex-row gap-4 items-center justify-between shadow-sm">

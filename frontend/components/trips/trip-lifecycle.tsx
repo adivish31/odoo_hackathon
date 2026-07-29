@@ -24,14 +24,14 @@ export default function TripLifecycle({
   const activeIdx = statusIndex[currentStatus];
 
   return (
-    <div className="bg-white border rounded-xl p-5">
-      <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-5">
+    <div className="bg-panel border border-hairline rounded-[10px] p-5">
+      <h3 className="text-[0.75rem] font-semibold text-ink-dim uppercase tracking-[0.08em] mb-5">
         Trip Lifecycle
       </h3>
 
       <div className="flex items-center justify-between relative">
         {/* Connecting line behind dots */}
-        <div className="absolute top-3 left-0 right-0 h-0.5 bg-slate-200" />
+        <div className="absolute top-3 left-0 right-0 h-0.5 bg-hairline" />
 
         {steps.map((step, idx) => {
           const isActive = idx === activeIdx;
@@ -39,15 +39,15 @@ export default function TripLifecycle({
           const isCancelled =
             step.key === "CANCELLED" && currentStatus === "CANCELLED";
 
-          let dotColor = "bg-slate-300";
-          if (isCancelled) dotColor = "bg-red-500";
-          else if (isActive) dotColor = "bg-blue-500";
-          else if (isPast) dotColor = "bg-emerald-500";
+          let dotColor = "bg-panel-raised border border-hairline";
+          if (isCancelled) dotColor = "bg-stop";
+          else if (isActive) dotColor = "bg-reflect";
+          else if (isPast) dotColor = "bg-go";
 
-          let textColor = "text-slate-400";
-          if (isCancelled) textColor = "text-red-600 font-semibold";
-          else if (isActive) textColor = "text-blue-600 font-semibold";
-          else if (isPast) textColor = "text-emerald-600";
+          let textColor = "text-ink-faint";
+          if (isCancelled) textColor = "text-stop font-semibold";
+          else if (isActive) textColor = "text-reflect font-semibold";
+          else if (isPast) textColor = "text-go";
 
           return (
             <div
@@ -56,16 +56,15 @@ export default function TripLifecycle({
             >
               <div
                 className={`
-                  w-6 h-6 rounded-full border-2 
-                  ${isActive || isPast || isCancelled ? "border-transparent" : "border-slate-300"}
+                  w-6 h-6 rounded-full 
                   ${dotColor}
                   transition-all duration-300
-                  ${isActive ? "ring-4 ring-blue-100 scale-110" : ""}
-                  ${isCancelled ? "ring-4 ring-red-100 scale-110" : ""}
+                  ${isActive ? "ring-4 ring-reflect/20 scale-110" : ""}
+                  ${isCancelled ? "ring-4 ring-stop/20 scale-110" : ""}
                 `}
               />
               <span
-                className={`text-xs mt-2 whitespace-nowrap ${textColor} transition-colors`}
+                className={`text-[0.75rem] mt-2 whitespace-nowrap ${textColor} transition-colors font-medium`}
               >
                 {step.label}
               </span>

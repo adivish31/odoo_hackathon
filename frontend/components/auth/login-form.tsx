@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { login } from "@/services/auth";
+import { setAuth } from "@/lib/auth-token";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -56,30 +57,7 @@ export default function LoginForm() {
       );
 
 
-      if (remember) {
-        localStorage.setItem(
-          "token",
-          data.token
-        );
-
-        localStorage.setItem(
-          "user",
-          JSON.stringify(data.user)
-        );
-
-      } else {
-
-        sessionStorage.setItem(
-          "token",
-          data.token
-        );
-
-        sessionStorage.setItem(
-          "user",
-          JSON.stringify(data.user)
-        );
-      }
-
+      setAuth(data.token, data.user, remember);
 
       router.push("/dashboard");
 
@@ -97,18 +75,18 @@ export default function LoginForm() {
   return (
     <div className="space-y-6">
 
-      <Card className="border-slate-200 shadow-lg">
+      <Card className="border-hairline bg-panel shadow-lg">
 
         <CardContent className="p-8">
 
 
           <div className="mb-8">
 
-            <h1 className="text-3xl font-bold text-slate-900">
+            <h1 className="text-3xl font-bold text-ink">
               Sign in to your account
             </h1>
 
-            <p className="mt-2 text-sm text-slate-500">
+            <p className="mt-2 text-sm text-ink-dim">
               Enter your credentials to continue
             </p>
 
@@ -123,19 +101,19 @@ export default function LoginForm() {
 
             <div className="space-y-2">
 
-              <Label>Email Address</Label>
+              <Label className="text-ink">Email Address</Label>
 
               <div className="relative">
 
                 <Mail
                   size={18}
-                  className="absolute left-3 top-3.5 text-slate-400"
+                  className="absolute left-3 top-3.5 text-ink-dim"
                 />
 
                 <Input
                   type="email"
                   placeholder="manager@transitops.io"
-                  className="pl-10 h-11"
+                  className="pl-10 h-11 bg-panel-raised border-hairline text-ink"
                   value={email}
                   onChange={(e)=>
                     setEmail(e.target.value)
@@ -154,11 +132,11 @@ export default function LoginForm() {
 
               <div className="flex justify-between">
 
-                <Label>Password</Label>
+                <Label className="text-ink">Password</Label>
 
                 <Link
                   href="#"
-                  className="text-sm text-blue-600 hover:underline"
+                  className="text-sm text-reflect hover:underline"
                 >
                   Forgot password?
                 </Link>
@@ -170,14 +148,14 @@ export default function LoginForm() {
 
                 <Lock
                   size={18}
-                  className="absolute left-3 top-3.5 text-slate-400"
+                  className="absolute left-3 top-3.5 text-ink-dim"
                 />
 
 
                 <Input
                   type="password"
                   placeholder="********"
-                  className="pl-10 h-11"
+                  className="pl-10 h-11 bg-panel-raised border-hairline text-ink"
                   value={password}
                   onChange={(e)=>
                     setPassword(e.target.value)
@@ -193,7 +171,7 @@ export default function LoginForm() {
 
             <div className="space-y-2">
 
-              <Label>
+              <Label className="text-ink">
                 Role Access
               </Label>
 
@@ -202,23 +180,23 @@ export default function LoginForm() {
 
                 <BadgeCheck
                   size={18}
-                  className="absolute left-3 top-3 z-20 text-slate-400"
+                  className="absolute left-3 top-3 z-20 text-ink-dim"
                 />
 
 
                 <Select
                   value={role}
-                  onValueChange={setRole}
+                  onValueChange={(value) => setRole(value ?? "")}
                 >
 
-                  <SelectTrigger className="pl-10 h-11">
+                  <SelectTrigger className="pl-10 h-11 bg-panel-raised border-hairline text-ink">
 
                     <SelectValue />
 
                   </SelectTrigger>
 
 
-                  <SelectContent>
+                  <SelectContent className="bg-panel border-hairline text-ink">
 
                     <SelectItem value="FLEET_MANAGER">
                       Fleet Manager
@@ -256,10 +234,11 @@ export default function LoginForm() {
                 onCheckedChange={(checked)=>
                   setRemember(!!checked)
                 }
+                className="border-hairline"
               />
 
 
-              <Label className="font-normal">
+              <Label className="font-normal text-ink-dim">
 
                 Remember this device for 30 days
 
@@ -272,7 +251,7 @@ export default function LoginForm() {
 
             <Button
               type="submit"
-              className="h-11 w-full bg-yellow-500 text-slate-900 hover:bg-yellow-600"
+              className="h-11 w-full"
             >
 
               Sign In
@@ -284,22 +263,22 @@ export default function LoginForm() {
             {
               error && (
 
-                <div className="flex gap-3 rounded-lg border border-red-300 bg-red-50 p-4">
+                <div className="flex gap-3 rounded-lg border border-stop/30 bg-stop/10 p-4">
 
 
                   <AlertCircle
-                    className="text-red-600"
+                    className="text-stop"
                     size={20}
                   />
 
 
                   <div>
 
-                    <p className="font-semibold text-red-700">
+                    <p className="font-semibold text-stop">
                       Invalid Credentials
                     </p>
 
-                    <p className="text-sm text-red-600">
+                    <p className="text-sm text-stop/80">
                       Please check email and password.
                     </p>
 

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   Truck,
@@ -13,6 +13,7 @@ import {
    Settings,
   LogOut,
 } from "lucide-react";
+import { clearAuth } from "@/lib/auth-token";
 
 const menus = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -28,6 +29,12 @@ const menus = [
 
 export default function AppSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  function handleLogout() {
+    clearAuth();
+    router.push("/login");
+  }
 
   return (
    <aside
@@ -35,25 +42,25 @@ export default function AppSidebar() {
   hidden
   md:flex
   min-h-screen
-  w-64
+  w-[232px]
   flex-col
-  border-r
-  bg-slate-900
-  text-white
+  border-r border-hairline
+  bg-panel
+  text-ink
   "
 >
 
-      <div className="border-b px-6 py-6">
-        <h1 className="text-2xl font-bold text-yellow-400">
+      <div className="border-b border-hairline px-6 py-6 flex flex-col justify-center h-[56px]">
+        <h1 className="text-[20px] font-bold text-amber font-heading">
           TransitOps
         </h1>
 
-        <p className="text-sm text-slate-400">
+        <p className="text-[12px] text-ink-dim">
           Smart Transport Platform
         </p>
       </div>
 
-      <nav className="flex-1 px-4 py-6 space-y-2">
+      <nav className="flex-1 px-3 py-6 space-y-1">
 
         {menus.map((menu) => {
           const Icon = menu.icon;
@@ -64,22 +71,25 @@ export default function AppSidebar() {
             <Link
               key={menu.href}
               href={menu.href}
-              className={`flex items-center gap-3 rounded-lg px-4 py-3 transition-all ${
+              className={`flex items-center gap-3 rounded-md px-3 py-[10px] transition-all text-[15px] ${
                 active
-                  ? "bg-yellow-500 text-slate-900 font-semibold"
-                  : "text-slate-300 hover:bg-slate-800"
+                  ? "bg-transparent text-amber font-semibold border-l-[3px] border-amber pl-[9px]"
+                  : "text-ink-dim hover:bg-panel-raised hover:text-ink border-l-[3px] border-transparent"
               }`}
             >
-              <Icon size={20} />
+              <Icon size={16} strokeWidth={1.75} />
               {menu.name}
             </Link>
           );
         })}
       </nav>
 
-      <div className="border-t p-4">
-        <button className="flex w-full items-center gap-3 rounded-lg px-4 py-3 hover:bg-slate-800">
-          <LogOut size={18} />
+      <div className="border-t border-hairline p-4">
+        <button
+          onClick={handleLogout}
+          className="flex w-full items-center gap-3 rounded-md px-3 py-3 text-[15px] text-ink-dim hover:bg-panel-raised hover:text-ink transition-all"
+        >
+          <LogOut size={16} strokeWidth={1.75} />
           Logout
         </button>
       </div>

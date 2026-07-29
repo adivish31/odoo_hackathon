@@ -5,6 +5,7 @@ import {
   TrendingUp
 } from "lucide-react";
 
+import type { ElementType } from "react";
 import { KPI } from "@/types/report";
 
 
@@ -13,7 +14,7 @@ interface Props{
 }
 
 
-const iconMap:any={
+const iconMap: Record<string, ElementType> = {
 
  "Fuel Efficiency":Fuel,
 
@@ -34,37 +35,38 @@ export default function KpiCard({data}:Props){
 
  return(
 
-  <div className="bg-white rounded-xl border p-5">
+  <div className="bg-panel rounded-[10px] border border-hairline p-5">
 
 
     <div className="flex justify-between">
 
-      <p className="text-sm text-slate-500">
+      <p className="text-sm font-semibold uppercase tracking-[0.08em] text-ink-dim">
         {data.title}
       </p>
 
 
       <Icon
         size={22}
-        className="text-blue-600"
+        className="text-reflect"
+        strokeWidth={1.75}
       />
 
     </div>
 
 
 
-    <h2 className="text-3xl font-bold mt-5">
+    <h2 className="text-3xl font-bold mt-5 font-heading text-ink">
 
       {data.value}
 
-      <span className="text-lg text-slate-400">
+      <span className="text-lg text-ink-dim ml-1">
         {data.unit}
       </span>
 
     </h2>
 
 
-    <p className="text-green-600 text-sm mt-2">
+    <p className="text-go text-sm mt-2 font-medium">
       {data.trend}
     </p>
 

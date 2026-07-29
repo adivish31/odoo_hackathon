@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { getDrivers } from "@/services/driverService";
 import { Driver } from "@/types/driver";
+import { Users, CheckCircle, AlertTriangle, Shield } from "lucide-react";
 
 
 export default function DriverStats(){
@@ -54,22 +55,22 @@ export default function DriverStats(){
     {
       title:"Total Drivers",
       value:totalDrivers,
-      icon:"👥"
+      icon: Users
     },
     {
       title:"On Duty",
       value:onDuty,
-      icon:"✅"
+      icon: CheckCircle
     },
     {
       title:"Expired Licenses",
       value:expiredLicenses,
-      icon:"⚠️"
+      icon: AlertTriangle
     },
     {
       title:"Avg Safety Score",
       value:`${avgSafetyScore}/100`,
-      icon:"🛡️"
+      icon: Shield
     }
   ];
 
@@ -80,37 +81,30 @@ export default function DriverStats(){
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
 
       {
-        stats.map((item)=>(
+        stats.map((item)=>{
+          const Icon = item.icon;
+          return (
+            <div
+              key={item.title}
+              className="bg-panel border border-hairline rounded-[10px] p-5 flex gap-4 items-center"
+            >
+              <div className="text-ink-dim flex items-center justify-center">
+                <Icon size={24} strokeWidth={1.75} />
+              </div>
 
-          <div
-            key={item.title}
-            className="bg-white border rounded-lg p-5 flex gap-4 items-center"
-          >
+              <div>
+                <p className="text-[0.75rem] leading-[1.2] font-semibold uppercase tracking-[0.08em] text-ink-dim mb-1">
+                  {item.title}
+                </p>
 
-            <div className="text-3xl">
-              {item.icon}
+                <h2 className="text-[2.5rem] leading-none font-bold font-heading">
+                  {item.value}
+                </h2>
+              </div>
             </div>
-
-
-            <div>
-
-              <p className="text-sm text-slate-500">
-                {item.title}
-              </p>
-
-
-              <h2 className="text-xl font-bold">
-                {item.value}
-              </h2>
-
-            </div>
-
-
-          </div>
-
-        ))
+          )
+        })
       }
-
 
     </div>
 

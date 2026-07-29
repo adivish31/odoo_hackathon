@@ -11,12 +11,12 @@ export default function OperationalInsightsTable({ data }: Props) {
 
   return (
 
-    <div className="bg-white border rounded-xl overflow-hidden">
+    <div className="bg-panel border border-hairline rounded-[10px] overflow-hidden">
 
 
-      <div className="p-5 border-b">
+      <div className="p-5 border-b border-hairline">
 
-        <h2 className="text-lg font-semibold">
+        <h2 className="text-lg font-bold font-heading text-ink">
           Operational Insights
         </h2>
 
@@ -30,31 +30,31 @@ export default function OperationalInsightsTable({ data }: Props) {
         <table className="w-full text-left">
 
 
-          <thead className="bg-slate-100">
+          <thead className="bg-panel border-b border-hairline">
 
-            <tr>
+            <tr className="text-[0.75rem] font-semibold uppercase tracking-[0.08em] text-ink-dim">
 
-              <th className="px-6 py-3 text-sm">
+              <th className="px-6 py-3">
                 Region
               </th>
 
 
-              <th className="px-6 py-3 text-sm">
+              <th className="px-6 py-3">
                 Total Trips
               </th>
 
 
-              <th className="px-6 py-3 text-sm">
+              <th className="px-6 py-3">
                 Avg. Fuel Cost
               </th>
 
 
-              <th className="px-6 py-3 text-sm">
+              <th className="px-6 py-3">
                 Maintenance %
               </th>
 
 
-              <th className="px-6 py-3 text-sm">
+              <th className="px-6 py-3">
                 Status
               </th>
 
@@ -65,7 +65,7 @@ export default function OperationalInsightsTable({ data }: Props) {
 
 
 
-          <tbody>
+          <tbody className="text-[0.9375rem] text-ink divide-y divide-hairline">
 
 
           {
@@ -73,40 +73,40 @@ export default function OperationalInsightsTable({ data }: Props) {
 
               <tr
                 key={item.region}
-                className="border-t hover:bg-slate-50"
+                className="hover:bg-panel-raised transition-colors h-[44px]"
               >
 
 
-                <td className="px-6 py-4 font-medium">
+                <td className="px-6 py-2 font-medium">
                   {item.region}
                 </td>
 
 
-                <td className="px-6 py-4">
+                <td className="px-6 py-2 tabular-nums font-mono">
                   {item.trips}
                 </td>
 
 
-                <td className="px-6 py-4">
+                <td className="px-6 py-2 tabular-nums font-mono">
                   {item.fuelCost}
                 </td>
 
 
-                <td className="px-6 py-4">
+                <td className="px-6 py-2 tabular-nums font-mono">
                   {item.maintenance}
                 </td>
 
 
-                <td className="px-6 py-4">
+                <td className="px-6 py-2">
 
 
                   <span
                     className={`
-                    px-3 py-1 rounded-full text-xs font-semibold
+                    px-3 py-1 rounded-[4px] text-xs font-semibold
                     ${
                       item.status === "Optimal"
-                      ? "bg-green-100 text-green-700"
-                      : "bg-yellow-100 text-yellow-700"
+                      ? "bg-go/10 text-go"
+                      : "bg-caution/10 text-caution"
                     }
                     `}
                   >

@@ -28,3 +28,10 @@ export interface VehicleCreateInput {
 export interface VehicleUpdateInput extends Partial<VehicleCreateInput> {
   status?: VehicleStatus;
 }
+
+export interface VehicleListFilters {
+  type?: VehicleType | "ALL";
+  status?: VehicleStatus | "ALL";
+  search?: string;
+  region?: string;
+}
