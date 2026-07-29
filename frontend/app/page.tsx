@@ -1,180 +1,410 @@
-import Link from "next/link";
-import { ArrowRight, BarChart3, Truck, Users, Wrench, ShieldCheck, Zap } from "lucide-react";
+"use client";
 
-export default function LandingPage() {
+import React, { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
+
+// --- HOOKS ---
+function useReducedMotion() {
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReduced(mediaQuery.matches);
+    const handler = (e: MediaQueryListEvent) => setReduced(e.matches);
+    mediaQuery.addEventListener("change", handler);
+    return () => mediaQuery.removeEventListener("change", handler);
+  }, []);
+  return reduced;
+}
+
+function useInView(options: IntersectionObserverInit = {}) {
+  const [inView, setInView] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setInView(true);
+        observer.disconnect();
+      }
+    }, options);
+    
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [options.threshold, options.rootMargin]);
+  
+  return [ref, inView] as const;
+}
+
+// --- COMPONENTS ---
+
+// Scrambles text on mount
+const ScrambleText = ({ text, delayMs = 0 }: { text: string; delayMs?: number }) => {
+  const [display, setDisplay] = useState("");
+  const reducedMotion = useReducedMotion();
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+  useEffect(() => {
+    if (reducedMotion) {
+      setDisplay(text);
+      return;
+    }
+
+    let timeout: NodeJS.Timeout;
+    let frame: number;
+    let iteration = 0;
+
+    const startAnimation = () => {
+      const animate = () => {
+        setDisplay(
+          text
+            .split("")
+            .map((char, index) => {
+              if (index < iteration || char === " ") return text[index];
+              return chars[Math.floor(Math.random() * chars.length)];
+            })
+            .join("")
+        );
+
+        if (iteration < text.length) {
+          iteration += 1 / 3;
+          frame = requestAnimationFrame(animate);
+        } else {
+          setDisplay(text);
+        }
+      };
+      frame = requestAnimationFrame(animate);
+    };
+
+    timeout = setTimeout(startAnimation, delayMs);
+    
+    return () => {
+      clearTimeout(timeout);
+      cancelAnimationFrame(frame);
+    };
+  }, [text, delayMs, reducedMotion]);
+
+  return <span>{display || text.replace(/./g, "\u00A0")}</span>;
+};
+
+// Count-up numbers
+const KpiCounter = ({ target, label }: { target: number; label: string }) => {
+  const [ref, inView] = useInView({ threshold: 0.5 });
+  const [count, setCount] = useState(0);
+  const reducedMotion = useReducedMotion();
+
+  useEffect(() => {
+    if (reducedMotion && inView) {
+      setCount(target);
+      return;
+    }
+    
+    if (inView) {
+      let start = 0;
+      const duration = 1100;
+      const startTime = performance.now();
+
+      const easeOutCubic = (x: number): number => 1 - Math.pow(1 - x, 3);
+
+      const step = (currentTime: number) => {
+        const progress = Math.min((currentTime - startTime) / duration, 1);
+        const currentCount = Math.floor(easeOutCubic(progress) * target);
+        setCount(currentCount);
+
+        if (progress < 1) {
+          requestAnimationFrame(step);
+        } else {
+          setCount(target);
+        }
+      };
+
+      requestAnimationFrame(step);
+    }
+  }, [inView, target, reducedMotion]);
+
   return (
-    <div className="min-h-screen bg-bitumen flex flex-col font-sans text-ink transition-colors duration-300">
-      {/* Navbar */}
-      <nav className="border-b border-hairline bg-panel/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Truck className="h-8 w-8 text-amber" />
-            <span className="font-heading font-bold text-xl tracking-wide text-ink">TransitOps</span>
+    <div ref={ref} className="bg-panel-raised border border-hairline p-6 rounded-2xl flex flex-col gap-2 shadow-sm hover:-translate-y-1 transition-transform">
+      <div className="font-mono font-bold text-5xl text-ink tabular-nums tracking-tighter">
+        {count}
+      </div>
+      <div className="font-sans text-ink-dim text-sm font-semibold">{label}</div>
+    </div>
+  );
+};
+
+// Status Pill
+const StatusPill = ({ status, flipToggle }: { status: string; flipToggle: boolean }) => {
+  const reducedMotion = useReducedMotion();
+  
+  const colors: Record<string, string> = {
+    "Available": "text-available bg-available/10 border-available/20",
+    "On Trip": "text-ontrip bg-ontrip/10 border-ontrip/20",
+    "In Shop": "text-inshop bg-inshop/10 border-inshop/20",
+    "Retired": "text-retired bg-retired/10 border-retired/20"
+  };
+
+  return (
+    <div className="relative h-7 w-28 perspective-1000" style={{ perspective: "1000px" }}>
+      <div 
+        className={`w-full h-full border rounded flex items-center justify-center font-mono text-[11px] font-bold tracking-wider uppercase transition-all ${reducedMotion ? "" : "duration-500"} ${colors[status] || colors["Retired"]}`}
+        style={{
+          transformStyle: "preserve-3d",
+          transform: !reducedMotion && flipToggle ? "rotateX(360deg)" : "rotateX(0deg)",
+        }}
+      >
+        {status}
+      </div>
+    </div>
+  );
+};
+
+// Hero Board Row
+const BoardRow = ({ unit, assignment, initialStatus, delayMs }: { unit: string; assignment: string; initialStatus: string; delayMs: number }) => {
+  const [status, setStatus] = useState(initialStatus);
+  const [flipToggle, setFlipToggle] = useState(false);
+
+  useEffect(() => {
+    const statuses = ["Available", "On Trip", "In Shop", "Retired"];
+    const interval = setInterval(() => {
+      if (Math.random() < 0.05) {
+        setStatus(statuses[Math.floor(Math.random() * statuses.length)]);
+        setFlipToggle(p => !p);
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="grid grid-cols-12 border-b border-hairline py-3 px-4 items-center bg-panel-raised">
+      <div className="col-span-2 font-mono text-amber text-lg font-bold">
+        <ScrambleText text={unit} delayMs={delayMs} />
+      </div>
+      <div className="col-span-7 font-mono text-ink text-sm font-semibold">
+        <ScrambleText text={assignment} delayMs={delayMs + 200} />
+      </div>
+      <div className="col-span-3 flex justify-end">
+        <StatusPill status={status} flipToggle={flipToggle} />
+      </div>
+    </div>
+  );
+};
+
+export default function SplashPage() {
+  const [clock, setClock] = useState("");
+  
+  useEffect(() => {
+    setClock(new Date().toLocaleTimeString("en-US", { hour12: false }));
+    const t = setInterval(() => {
+      setClock(new Date().toLocaleTimeString("en-US", { hour12: false }));
+    }, 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  return (
+    // Forced .light class to guarantee the requested light theme mapping
+    <div className="light min-h-screen bg-bitumen text-ink font-sans selection:bg-amber/20 selection:text-amber overflow-x-hidden relative">
+      
+      {/* Background Wavy Lines */}
+      <div className="absolute inset-0 pointer-events-none opacity-[0.03] z-0 text-ink">
+        <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <pattern id="waves" width="60" height="60" patternUnits="userSpaceOnUse" patternTransform="rotate(15)">
+              <path d="M0 30 Q15 0 30 30 T60 30" fill="none" stroke="currentColor" strokeWidth="1.5" />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#waves)" />
+        </svg>
+      </div>
+
+      {/* Floating Pill Nav */}
+      <nav className="fixed top-6 left-1/2 -translate-x-1/2 z-50">
+        <div className="bg-panel/70 backdrop-blur-xl border border-hairline rounded-full px-2 py-2 flex items-center gap-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+          <span className="font-display font-bold text-lg px-4 tracking-tight">TransitOps</span>
+          <div className="hidden md:flex items-center gap-6 font-sans text-sm font-semibold">
+            <Link href="#rules" className="text-ink hover:text-amber transition-colors">Rules</Link>
+            <Link href="#roles" className="text-ink hover:text-amber transition-colors">Roles</Link>
+            <Link href="#dashboard" className="text-ink hover:text-amber transition-colors">Dashboard</Link>
+            <Link href="#stack" className="text-ink hover:text-amber transition-colors">Stack</Link>
           </div>
-          <div>
-            <Link 
-              href="/login" 
-              className="px-5 py-2 rounded-full bg-amber text-[#1A1300] font-semibold text-sm hover:brightness-110 transition-all shadow-md"
-            >
-              Sign In
-            </Link>
-          </div>
+          <Link 
+            href="/login"
+            className="bg-ink text-panel-raised rounded-full px-6 py-2.5 text-sm font-bold hover:bg-ink-dim transition-colors ml-4"
+          >
+            Log in
+          </Link>
         </div>
       </nav>
 
-      <main className="flex-grow">
-        {/* Hero Section */}
-        <section className="pt-24 pb-32 px-4 sm:px-6 lg:px-8 text-center max-w-5xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-panel border border-hairline text-[0.875rem] font-medium text-ink-dim mb-8">
-            <Zap className="h-4 w-4 text-go" />
-            <span>Welcome to the future of logistics</span>
-          </div>
-          <h1 className="text-5xl md:text-7xl font-bold font-heading text-ink tracking-tight mb-6">
-            Smart Transport Operations, <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber to-amber/70">Unified.</span>
-          </h1>
-          <p className="text-lg md:text-xl text-ink-dim max-w-2xl mx-auto mb-10 leading-relaxed">
-            Take complete control of your fleet with real-time tracking, predictive maintenance, automated expenses, and intelligent role-based access.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link 
-              href="/dashboard" 
-              className="flex items-center gap-2 px-8 py-4 rounded-full bg-amber text-[#1A1300] font-bold text-lg hover:brightness-110 transition-all hover:scale-105 active:scale-95 shadow-lg shadow-amber/20 w-full sm:w-auto justify-center"
-            >
-              Go to Dashboard <ArrowRight className="h-5 w-5" />
-            </Link>
-            <Link 
-              href="/login" 
-              className="flex items-center gap-2 px-8 py-4 rounded-full bg-panel text-ink border border-hairline font-bold text-lg hover:bg-panel-raised transition-all w-full sm:w-auto justify-center"
-            >
-              Sign In
-            </Link>
-          </div>
-        </section>
-
-        {/* Features Section */}
-        <section className="py-24 bg-panel border-y border-hairline">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold font-heading text-ink mb-4">Everything you need to scale</h2>
-              <p className="text-ink-dim text-lg">A complete toolkit for modern fleet managers.</p>
+      <main>
+        {/* HERO SECTION */}
+        <section className="relative z-10 pt-40 pb-24 px-4 sm:px-6 lg:px-8 max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-8 min-h-[90vh] items-center">
+          
+          {/* Left Col */}
+          <div className="lg:col-span-6 flex flex-col gap-8 xl:pr-12">
+            <div className="inline-flex items-center gap-2 border border-amber-200/60 bg-amber-50/50 backdrop-blur-sm rounded-full px-4 py-1.5 w-fit text-amber-600 font-sans text-xs font-bold tracking-wide uppercase">
+               <span className="w-2 h-2 rounded-full bg-available animate-pulse"></span>
+               System status — enforcing 10 rules live
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {/* Feature 1 */}
-              <div className="bg-panel-raised p-8 rounded-2xl border border-hairline hover:border-amber/50 transition-colors group">
-                <div className="h-12 w-12 rounded-xl bg-amber/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                  <BarChart3 className="h-6 w-6 text-amber" />
-                </div>
-                <h3 className="text-xl font-bold font-heading text-ink mb-3">Real-time Analytics</h3>
-                <p className="text-ink-dim leading-relaxed">Monitor KPIs, fleet utilization, and operational costs instantly with gorgeous, interactive dashboards.</p>
-              </div>
-
-              {/* Feature 2 */}
-              <div className="bg-panel-raised p-8 rounded-2xl border border-hairline hover:border-reflect/50 transition-colors group">
-                <div className="h-12 w-12 rounded-xl bg-reflect/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                  <Truck className="h-6 w-6 text-reflect" />
-                </div>
-                <h3 className="text-xl font-bold font-heading text-ink mb-3">Vehicle Management</h3>
-                <p className="text-ink-dim leading-relaxed">Track your entire fleet, including status, model, registration, and comprehensive historical logs.</p>
-              </div>
-
-              {/* Feature 3 */}
-              <div className="bg-panel-raised p-8 rounded-2xl border border-hairline hover:border-go/50 transition-colors group">
-                <div className="h-12 w-12 rounded-xl bg-go/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                  <Users className="h-6 w-6 text-go" />
-                </div>
-                <h3 className="text-xl font-bold font-heading text-ink mb-3">Driver Directory</h3>
-                <p className="text-ink-dim leading-relaxed">Keep track of your workforce, their license statuses, availability, and assign them directly to active trips.</p>
-              </div>
-
-              {/* Feature 4 */}
-              <div className="bg-panel-raised p-8 rounded-2xl border border-hairline hover:border-caution/50 transition-colors group">
-                <div className="h-12 w-12 rounded-xl bg-caution/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                  <Wrench className="h-6 w-6 text-caution" />
-                </div>
-                <h3 className="text-xl font-bold font-heading text-ink mb-3">Maintenance Hub</h3>
-                <p className="text-ink-dim leading-relaxed">Schedule routine services, track repairs, and ensure your fleet is always road-ready and compliant.</p>
-              </div>
-
-              {/* Feature 5 */}
-              <div className="bg-panel-raised p-8 rounded-2xl border border-hairline hover:border-amber/50 transition-colors group lg:col-span-2">
-                <div className="h-12 w-12 rounded-xl bg-amber/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                  <ShieldCheck className="h-6 w-6 text-amber" />
-                </div>
-                <h3 className="text-xl font-bold font-heading text-ink mb-3">Enterprise Grade RBAC</h3>
-                <p className="text-ink-dim leading-relaxed">Secure your operations with robust Role-Based Access Control. Assign specific permissions for Fleet Managers, Mechanics, Dispatchers, and Drivers natively.</p>
-              </div>
+            <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.05] tracking-tight">
+              The yard runs on a board that <span className="text-amber">never lies.</span>
+            </h1>
+            
+            <p className="text-ink-dim text-lg sm:text-xl leading-relaxed max-w-xl font-sans font-medium">
+              Spreadsheets and paper logbooks let an expired license get dispatched. TransitOps won't — every vehicle, driver, and trip status lives in one place, and the rules that protect your fleet are enforced in the backend, not just hidden in the UI.
+            </p>
+            
+            {/* Glass/Glowing Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 mt-6">
+               <Link href="/login" className="relative group rounded-xl overflow-hidden p-[1px]">
+                 <span className="absolute inset-0 bg-gradient-to-r from-amber-300 via-amber-400 to-amber-300 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-xl blur-[2px]"></span>
+                 <div className="relative bg-panel-raised/80 backdrop-blur-xl border border-hairline shadow-sm px-8 py-4 rounded-xl flex items-center justify-center gap-2 font-sans text-sm font-bold group-hover:bg-panel-raised transition-colors">
+                    Log in to the board <ArrowRight size={16} />
+                 </div>
+               </Link>
+               <Link href="#rules" className="relative group rounded-xl overflow-hidden p-[1px]">
+                 <span className="absolute inset-0 bg-gradient-to-r from-gray-300 to-gray-200 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-xl blur-[2px]"></span>
+                 <div className="relative bg-bitumen/80 backdrop-blur-xl border border-hairline/80 shadow-sm px-8 py-4 rounded-xl flex items-center justify-center gap-2 font-sans text-sm font-bold">
+                    See the rules it enforces
+                 </div>
+               </Link>
             </div>
+            
+            {/* Footer stats */}
+            <div className="font-mono text-[10px] text-ink-dim/70 flex flex-wrap items-center gap-4 mt-12 uppercase tracking-widest font-semibold">
+               VEHICLE REGISTRY · DRIVER COMPLIANCE · TRIP DISPATCH · MAINTENANCE · FUEL & EXPENSE · REPORTS
+            </div>
+          </div>
+
+          {/* Right Col: The Board Card */}
+          <div className="lg:col-span-6 relative h-full min-h-[500px] w-full hidden lg:flex items-center justify-center">
+             
+             <div className="w-[110%] ml-[-5%] bg-panel-raised border border-hairline shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] rounded-[24px] overflow-hidden z-20 flex flex-col hover:-translate-y-2 transition-transform duration-700">
+               <div className="bg-panel border-b border-hairline px-6 py-4 flex justify-between items-center">
+                  <div className="font-mono font-bold text-ink text-sm flex items-center gap-3 tracking-wide">
+                    <span className="w-2.5 h-2.5 rounded-full bg-available animate-pulse"></span>
+                    YARD STATUS
+                  </div>
+                  <div className="font-mono font-bold text-amber text-sm tabular-nums">
+                    {clock || "00:00:00"}
+                  </div>
+               </div>
+               
+               <div className="grid grid-cols-12 px-6 py-3 border-b border-hairline bg-bitumen font-mono text-[11px] text-ink-dim tracking-widest uppercase font-semibold">
+                 <div className="col-span-2">Unit</div>
+                 <div className="col-span-7">Assignment</div>
+                 <div className="col-span-3 text-right">State</div>
+               </div>
+               
+               <div className="flex flex-col">
+                 <BoardRow unit="VN-05" assignment="Ranchi → Bokaro" initialStatus="Available" delayMs={0} />
+                 <BoardRow unit="TR-11" assignment="Ranchi → Patna" initialStatus="On Trip" delayMs={140} />
+                 <BoardRow unit="BK-02" assignment="Local courier run" initialStatus="Available" delayMs={280} />
+                 <BoardRow unit="BS-07" assignment="Ranchi → Jamshedpur" initialStatus="In Shop" delayMs={420} />
+                 <BoardRow unit="TR-14" assignment="Dhanbad → Ranchi" initialStatus="On Trip" delayMs={560} />
+               </div>
+               
+               <div className="p-4 bg-panel font-mono text-[10px] text-ink-dim text-right tracking-widest border-t border-hairline font-semibold">
+                 UPDATED IN REAL TIME · NO MANUAL OVERRIDE
+               </div>
+             </div>
+             
           </div>
         </section>
+
+        {/* 5. THE RULEBOOK */}
+        <section id="rules" className="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-hairline/60">
+          <div className="flex flex-col md:flex-row md:items-end justify-between border-b border-hairline pb-8 mb-16 gap-6">
+            <div>
+              <div className="font-mono text-amber text-lg font-bold mb-2">01</div>
+              <h2 className="font-display text-4xl md:text-5xl font-bold uppercase tracking-tight">The rulebook</h2>
+            </div>
+            <p className="text-ink-dim font-sans text-lg max-w-md md:text-right leading-relaxed font-medium">
+              Ten rules, enforced server-side, on every dispatch — not just hidden buttons in the UI.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-16">
+            {[
+              { id: "R1", title: "Registration numbers are unique", desc: "Duplicate plates are rejected at the database, with a plain-language error naming the conflict." },
+              { id: "R2", title: "Retired or in-shop vehicles never dispatch", desc: "They vanish from the assignment dropdown the moment their status changes — no exceptions typed in." },
+              { id: "R3", title: "Expired or suspended drivers can't be assigned", desc: "Checked against today's date at the moment of assignment, not at the moment the license was issued.", stamp: true },
+              { id: "R4", title: "No double-booking", desc: "A vehicle or driver already on a trip can't be handed a second one — enforced inside a single transaction to close the race condition." },
+              { id: "R5", title: "Cargo can't exceed capacity", desc: "450 kg into a 500 kg van passes. 600 kg into the same van doesn't — the board says exactly why.", stamp: true },
+              { id: "R6", title: "Dispatch flips both assets at once", desc: "Trip, vehicle, and driver move to 'on trip' together — never a half-updated state." },
+              { id: "R7", title: "Completion returns both to available", desc: "Final odometer and fuel are logged, and the vehicle's running distance updates automatically." },
+              { id: "R8", title: "Cancelling restores availability", desc: "A dispatched trip that's cancelled hands the vehicle and driver straight back to the pool." },
+              { id: "R9", title: "Open maintenance takes the vehicle offline", desc: "Logging a repair moves the vehicle to 'in shop' — and it can't be opened against a vehicle mid-trip." },
+              { id: "R10", title: "Closing maintenance brings it back — usually", desc: "Vehicle returns to available on close, unless it's been retired. Retired is terminal." }
+            ].map((rule) => (
+              <div key={rule.id} className="relative flex gap-6 group">
+                <div className="font-mono font-bold text-hairline text-4xl transition-colors group-hover:text-amber">
+                  {rule.id}
+                </div>
+                <div>
+                  <h3 className="font-display text-xl font-bold mb-2 tracking-wide text-ink">{rule.title}</h3>
+                  <p className="text-ink-dim leading-relaxed font-sans">{rule.desc}</p>
+                </div>
+                {rule.stamp && (
+                  <div className="absolute -top-4 -right-2 md:-right-8 rotate-[15deg] border-4 border-red-500 text-red-500 font-mono font-bold text-2xl px-3 py-1 opacity-80 backdrop-blur-sm pointer-events-none rounded-sm">
+                    BLOCKED
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* 7. ONE BOARD, LIVE */}
+        <section id="dashboard" className="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-hairline/60">
+          <div className="flex flex-col md:flex-row md:items-end justify-between border-b border-hairline pb-8 mb-16 gap-6">
+            <div>
+              <div className="font-mono text-amber text-lg font-bold mb-2">02</div>
+              <h2 className="font-display text-4xl md:text-5xl font-bold uppercase tracking-tight">One board, live</h2>
+            </div>
+            <p className="text-ink-dim font-sans text-lg max-w-md md:text-right leading-relaxed font-medium">
+              KPIs refetch after every mutation — dispatch a trip and watch the numbers move.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-16">
+            <KpiCounter target={72} label="Fleet utilization %" />
+            <KpiCounter target={14} label="Active trips" />
+            <KpiCounter target={9} label="Drivers on duty" />
+            <KpiCounter target={2} label="Vehicles in shop" />
+          </div>
+        </section>
+
       </main>
 
-      {/* Footer Area with Giant Text */}
-      <div className="relative overflow-hidden bg-bitumen pt-20 pb-0 mt-10">
-        {/* Faded Background Text */}
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-[10%] pointer-events-none select-none opacity-[0.04] z-0 flex justify-center w-full">
-          <span className="text-[20vw] font-heading font-bold leading-none text-ink whitespace-nowrap tracking-tighter">
-            TransitOps
-          </span>
+      {/* 9. FOOTER */}
+      <footer className="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center flex flex-col items-center border-t border-hairline/60">
+        <h2 className="font-display text-5xl md:text-7xl font-bold mb-6">
+          Ready to <span className="text-amber">dispatch?</span>
+        </h2>
+        <p className="text-ink-dim font-sans text-lg max-w-xl mb-12 font-medium">
+          Log in with any of the four seeded roles and try to break a rule. You won't get far.
+        </p>
+
+        <div className="flex flex-col sm:flex-row gap-4 mb-16">
+          <Link href="/login" className="bg-amber text-white rounded-xl px-8 py-4 font-sans font-bold text-center hover:bg-amber-soft transition-colors shadow-lg shadow-amber/20">
+            Log in to TransitOps
+          </Link>
+          <Link href="#rules" className="bg-panel-raised border border-hairline text-ink rounded-xl px-8 py-4 font-sans font-bold text-center hover:bg-panel transition-colors shadow-sm">
+            Review the rulebook again
+          </Link>
         </div>
 
-        {/* Footer Card */}
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 z-10 pb-40">
-          <div className="bg-panel rounded-[24px] border border-hairline p-8 md:p-12 shadow-2xl">
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-12 md:gap-8 mb-12">
-              {/* Brand Col */}
-              <div className="md:col-span-5 flex flex-col gap-6">
-                <div className="flex items-center gap-2">
-                  <Truck className="h-6 w-6 text-reflect" />
-                  <span className="font-heading font-bold text-xl tracking-wide text-ink">TransitOps</span>
-                </div>
-                <p className="text-[0.875rem] text-ink-dim leading-relaxed max-w-md">
-                  TransitOps empowers transport and logistics teams to transform fragmented fleet records into an intelligent operations platform — making tracking, maintenance, and analytics easier to share, understand, and act on.
-                </p>
-                {/* Social Icons */}
-                <div className="flex items-center gap-5 text-ink-dim mt-2">
-                  <a href="#" className="hover:text-ink transition-colors">
-                     {/* X (Twitter) */}
-                     <svg className="w-[1.125rem] h-[1.125rem]" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 24.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-                  </a>
-                  <a href="#" className="hover:text-ink transition-colors">
-                     {/* Instagram */}
-                     <svg className="w-[1.125rem] h-[1.125rem]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
-                  </a>
-                  <a href="#" className="hover:text-ink transition-colors">
-                     {/* LinkedIn */}
-                     <svg className="w-[1.125rem] h-[1.125rem]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg>
-                  </a>
-                  <a href="#" className="hover:text-ink transition-colors">
-                     {/* GitHub */}
-                     <svg className="w-[1.125rem] h-[1.125rem]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></svg>
-                  </a>
-                </div>
-              </div>
-
-              {/* Links Cols */}
-              <div className="md:col-span-7 flex flex-row justify-start md:justify-end gap-16 md:gap-32">
-                <div className="flex flex-col gap-5">
-                  <h4 className="font-bold text-ink text-[0.875rem]">Product</h4>
-                  <Link href="#features" className="text-[0.875rem] font-medium text-ink-dim hover:text-ink transition-colors">Features</Link>
-                  <Link href="/dashboard" className="text-[0.875rem] font-medium text-ink-dim hover:text-ink transition-colors">Dashboard</Link>
-                </div>
-              </div>
-            </div>
-
-            {/* Bottom Row */}
-            <div className="pt-8 border-t border-hairline flex flex-col md:flex-row items-center justify-between gap-4">
-              <p className="text-[0.8125rem] font-medium text-ink-dim">
-                &copy; 2026 TransitOps. All rights reserved.
-              </p>
-              <div className="flex items-center gap-6 text-[0.8125rem] font-medium text-ink-dim">
-                <Link href="#" className="hover:text-ink transition-colors">Privacy Policy</Link>
-                <Link href="#" className="hover:text-ink transition-colors">Terms of Service</Link>
-              </div>
-            </div>
-          </div>
+        <div className="border border-dashed border-hairline bg-panel-raised rounded-xl px-8 py-4 font-mono text-sm text-ink mb-24">
+          Judge access — <span className="font-bold text-amber">fleet@transitops.com</span> / demo123
         </div>
-      </div>
+
+        <div className="w-full flex flex-col md:flex-row justify-between items-center gap-4 border-t border-hairline pt-8 font-mono text-[10px] text-ink-faint uppercase tracking-widest font-bold">
+          <div>TRANSITOPS — BUILT FOR THE ODOO HACKATHON, 8-HOUR BUILD</div>
+          <div>VEHICLE · DRIVER · TRIP · MAINTENANCE · FUEL · REPORT</div>
+        </div>
+      </footer>
+
     </div>
   );
 }

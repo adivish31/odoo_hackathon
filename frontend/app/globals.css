@@ -38,10 +38,27 @@
   --color-ink-dim: var(--ink-dim);
   --color-ink-faint: var(--ink-faint);
 
+  /* Landing Page specific colors */
+  --color-charcoal: #1B1E20;
+  --color-charcoal-2: #24282B;
+  --color-charcoal-3: #2E3336;
+  --color-board-bg: #12151A;
+  --color-board-seam: #0A0C0F;
+  --color-amber-soft: #C98B34;
+  --color-amber-dim: #6B5730;
+  --color-offwhite: #EDEEEC;
+  --color-steel: #93A0A8;
+  --color-steel-dim: #5C666C;
+  --color-available: #3FB56B;
+  --color-ontrip: #4C8DFF;
+  --color-inshop: #E8A93B;
+  --color-retired: #6B7278;
+  --color-stamp-red: #D6483F;
+
   /* Fonts */
-  --font-sans: var(--font-barlow);
-  --font-heading: var(--font-barlow-semi-condensed);
-  --font-mono: var(--font-spline-sans-mono);
+  --font-sans: var(--font-nunito), system-ui, sans-serif;
+  --font-display: var(--font-ubuntu), var(--font-nunito), system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
 
   /* Radius */
   --radius-sm: var(--radius-ctl);
@@ -96,7 +113,7 @@
   
   /* Reset some default h1-h6 styles to use the heading font */
   h1, h2, h3, h4, h5, h6 {
-    @apply font-heading tracking-[0.01em];
+    @apply font-display tracking-[0.01em];
   }
   
   /* General data tables font-mono apply */

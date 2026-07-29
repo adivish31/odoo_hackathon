@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Barlow, Barlow_Semi_Condensed, Spline_Sans_Mono } from "next/font/google";
+import { Barlow, Barlow_Semi_Condensed, Spline_Sans_Mono, Nunito, Ubuntu, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 
@@ -21,6 +21,24 @@ const splineSansMono = Spline_Sans_Mono({
   weight: ["400", "500"],
 });
 
+const nunito = Nunito({
+  variable: "--font-nunito",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
+const ubuntu = Ubuntu({
+  variable: "--font-ubuntu",
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
+});
+
 export const metadata: Metadata = {
   title: "TransitOps",
   description: "Smart Transport Operations Platform",
@@ -35,7 +53,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${barlow.variable} ${barlowSemiCondensed.variable} ${splineSansMono.variable} h-full antialiased`}
+      className={`${barlow.variable} ${barlowSemiCondensed.variable} ${splineSansMono.variable} ${nunito.variable} ${ubuntu.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <ThemeProvider
